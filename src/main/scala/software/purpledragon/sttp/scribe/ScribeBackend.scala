@@ -33,7 +33,10 @@ abstract class ScribeBackend(service: OAuthService) extends SttpBackend[Id, Noth
   override def send[T](request: Request[T, Nothing]): Id[Response[T]] = {
     val oAuthRequest = new OAuthRequest(method2Verb(request.method), request.uri.toString())
 
-    // TODO headers
+    request.headers foreach {
+      case (name, value) => oAuthRequest.addHeader(name, value)
+    }
+
     setRequestPayload(request.body, oAuthRequest)
 
     signRequest(oAuthRequest)
@@ -48,7 +51,10 @@ abstract class ScribeBackend(service: OAuthService) extends SttpBackend[Id, Noth
   private def handleResponse[T](r: ScribeResponse, responseAs: ResponseAs[T, Nothing]): Response[T] = {
     val code = r.getCode
 
-    val headers = r.getHeaders.asScala.to[immutable.Seq]
+    // scribe includes the status line as a header with a key of 'null' :-(
+    val headers = r.getHeaders.asScala
+      .to[immutable.Seq]
+      .filterNot(_._1 == null)
 
     val contentEncoding = Option(r.getHeader(HeaderNames.ContentEncoding))
     val charsetFromHeaders = Option(r.getHeader(HeaderNames.ContentType)).flatMap(encodingFromContentType)
@@ -100,6 +106,8 @@ abstract class ScribeBackend(service: OAuthService) extends SttpBackend[Id, Noth
     }
   }
 
+  protected def signRequest(request: OAuthRequest): Unit
+
   private def encodingFromContentType(contentType: String): Option[String] = {
     contentType
       .split(";")
@@ -108,8 +116,6 @@ abstract class ScribeBackend(service: OAuthService) extends SttpBackend[Id, Noth
         case s if s.startsWith("charset=") => s.substring(8)
       }
   }
-
-  protected def signRequest(request: OAuthRequest): Unit
 
   private def setRequestPayload(body: RequestBody[_], request: OAuthRequest): Unit = {
     body match {
