@@ -1,7 +1,7 @@
 name := "sttp-scribe"
 organization := "software.purpledragon"
 
-version := "1.2.0-SNAPSHOT"
+version := "1.2.0"
 
 scalaVersion := "2.12.6"
 crossScalaVersions := Seq(scalaVersion.value, "2.11.12")

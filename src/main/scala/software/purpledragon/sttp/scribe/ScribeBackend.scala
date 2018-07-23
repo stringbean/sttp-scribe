@@ -69,7 +69,7 @@ abstract class ScribeBackend(service: OAuthService) extends SttpBackend[Id, Noth
     val charsetFromHeaders = Option(r.getHeader(HeaderNames.ContentType)).flatMap(encodingFromContentType)
 
     val is = wrapInput(r.getStream, contentEncoding)
- 
+
     val body: Either[Array[Byte], T] = if (StatusCodes.isSuccess(code)) {
       Right(readResponseBody(is, responseAs, charsetFromHeaders))
     } else {
