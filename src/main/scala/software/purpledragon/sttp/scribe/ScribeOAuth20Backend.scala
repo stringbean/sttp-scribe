@@ -16,15 +16,39 @@
 
 package software.purpledragon.sttp.scribe
 
-import com.github.scribejava.core.model.{OAuth2AccessToken, OAuthRequest}
+import com.github.scribejava.core.exceptions.OAuthException
+import com.github.scribejava.core.model.{OAuth2AccessToken, OAuthRequest, Response}
 import com.github.scribejava.core.oauth.OAuth20Service
 
 class ScribeOAuth20Backend(service: OAuth20Service, tokenProvider: OAuth2TokenProvider) extends ScribeBackend(service) {
+  private var oauthToken: Option[OAuth2AccessToken] = None
+
   override protected def signRequest(request: OAuthRequest): Unit = {
-    service.signRequest(tokenProvider.accessTokenForRequest, request)
+    service.signRequest(tokenMeh, request)
+  }
+
+  override protected def renewAccessToken(response: Response): Boolean = {
+    try {
+      val newToken = service.refreshAccessToken(tokenMeh.getRefreshToken)
+      tokenProvider.tokenRenewed(newToken)
+      oauthToken = Some(newToken)
+      true
+    } catch {
+      case _: OAuthException =>
+        false
+    }
+  }
+
+  private def tokenMeh: OAuth2AccessToken = {
+    if (oauthToken.isEmpty) {
+      oauthToken = Some(tokenProvider.accessTokenForRequest)
+    }
+
+    oauthToken.get
   }
 }
 
 trait OAuth2TokenProvider {
   def accessTokenForRequest: OAuth2AccessToken
+  def tokenRenewed(newToken: OAuth2AccessToken): Unit
 }

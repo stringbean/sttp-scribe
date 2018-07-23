@@ -16,7 +16,7 @@
 
 package software.purpledragon.sttp.scribe
 
-import com.github.scribejava.core.model.{OAuth1AccessToken, OAuthRequest}
+import com.github.scribejava.core.model.{OAuth1AccessToken, OAuthRequest, Response}
 import com.github.scribejava.core.oauth.OAuth10aService
 
 class ScribeOAuth10aBackend(service: OAuth10aService, tokenProvider: OAuth1TokenProvider)
@@ -24,6 +24,11 @@ class ScribeOAuth10aBackend(service: OAuth10aService, tokenProvider: OAuth1Token
 
   override protected def signRequest(request: OAuthRequest): Unit = {
     service.signRequest(tokenProvider.accessTokenForRequest, request)
+  }
+
+  override protected def renewAccessToken(response: Response): Boolean = {
+    // should be covered by request token
+    false
   }
 }
 

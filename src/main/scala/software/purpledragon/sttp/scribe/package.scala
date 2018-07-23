@@ -33,6 +33,4 @@ package object scribe {
     transfer(is, baos)
     baos.toByteArray
   }
-
-
 }

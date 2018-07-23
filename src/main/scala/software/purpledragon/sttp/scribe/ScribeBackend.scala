@@ -42,11 +42,20 @@ abstract class ScribeBackend(service: OAuthService) extends SttpBackend[Id, Noth
     signRequest(oAuthRequest)
 
     val response = service.execute(oAuthRequest)
-    handleResponse(response, request.response)
+
+    if (response.getCode == StatusCodes.Unauthorized && renewAccessToken(response)) {
+      // renewed access token - retry the request
+      send(request)
+    } else {
+      handleResponse(response, request.response)
+    }
   }
 
   override def close(): Unit = Unit
   override def responseMonad: MonadError[Id] = IdMonad
+
+  protected def signRequest(request: OAuthRequest): Unit
+  protected def renewAccessToken(response: ScribeResponse): Boolean
 
   private def handleResponse[T](r: ScribeResponse, responseAs: ResponseAs[T, Nothing]): Response[T] = {
     val code = r.getCode
@@ -60,11 +69,11 @@ abstract class ScribeBackend(service: OAuthService) extends SttpBackend[Id, Noth
     val charsetFromHeaders = Option(r.getHeader(HeaderNames.ContentType)).flatMap(encodingFromContentType)
 
     val is = wrapInput(r.getStream, contentEncoding)
-
-    val body = if (StatusCodes.isSuccess(code)) {
+ 
+    val body: Either[Array[Byte], T] = if (StatusCodes.isSuccess(code)) {
       Right(readResponseBody(is, responseAs, charsetFromHeaders))
     } else {
-      Left(readResponseBody(is, asByteArray, charsetFromHeaders))
+      Left(r.getBody.getBytes)
     }
 
     Response(body, code, r.getMessage, headers, Nil)
@@ -105,8 +114,6 @@ abstract class ScribeBackend(service: OAuthService) extends SttpBackend[Id, Noth
         }
     }
   }
-
-  protected def signRequest(request: OAuthRequest): Unit
 
   private def encodingFromContentType(contentType: String): Option[String] = {
     contentType
