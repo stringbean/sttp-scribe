@@ -5,8 +5,8 @@ scalaVersion := "2.12.7"
 crossScalaVersions := Seq(scalaVersion.value, "2.11.12")
 
 libraryDependencies ++= Seq(
-  "com.softwaremill.sttp" %% "core"             % "1.2.3",
-  "com.github.scribejava" %  "scribejava-apis"  % "5.5.0",
+  "com.softwaremill.sttp" %% "core"             % "1.3.9",
+  "com.github.scribejava" %  "scribejava-apis"  % "6.0.0",
   "org.scalatest"         %% "scalatest"        % "3.0.5"   % Test
 )
 
