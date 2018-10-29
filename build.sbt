@@ -1,8 +1,6 @@
 name := "sttp-scribe"
 organization := "software.purpledragon"
 
-version := "1.2.0"
-
 scalaVersion := "2.12.6"
 crossScalaVersions := Seq(scalaVersion.value, "2.11.12")
 
@@ -28,3 +26,6 @@ bintrayPackageLabels := Seq("sttp", "scribe", "oauth")
 useGpg := true
 usePgpKeyHex("B19D7A14F6F8B3BFA9FF655A5216B5A5F723A92D")
 pgpSecretRing := pgpPublicRing.value
+releasePublishArtifactsAction := PgpKeys.publishSigned.value
+
+releaseCrossBuild := true
