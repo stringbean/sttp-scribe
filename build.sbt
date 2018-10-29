@@ -21,6 +21,7 @@ organizationName := "Purple Dragon Software"
 organizationHomepage := Some(url("https://purpledragon.software"))
 homepage := Some(url("https://github.com/stringbean/sttp-scribe"))
 bintrayVcsUrl := Some("https://github.com/stringbean/sttp-scribe.git")
+scmInfo := Some(ScmInfo(url("https://github.com/stringbean/sttp-scribe"), "https://github.com/stringbean/sttp-scribe.git"))
 
 bintrayPackageLabels := Seq("sttp", "scribe", "oauth")
 
