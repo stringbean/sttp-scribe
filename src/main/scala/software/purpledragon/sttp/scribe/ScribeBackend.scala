@@ -24,6 +24,7 @@ import com.github.scribejava.core.oauth.OAuthService
 import com.softwaremill.sttp._
 import com.softwaremill.sttp.internal.SttpFile
 
+import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 import scala.collection.immutable
 import scala.io.Source
@@ -58,34 +59,43 @@ abstract class ScribeBackend(service: OAuthService) extends SttpBackend[Id, Noth
   protected def renewAccessToken(response: ScribeResponse): Boolean
 
   private def handleResponse[T](r: ScribeResponse, responseAs: ResponseAs[T, Nothing]): Response[T] = {
-    val code = r.getCode
+
+    val statusCode = r.getCode
 
     // scribe includes the status line as a header with a key of 'null' :-(
     val headers = r.getHeaders.asScala
       .to[immutable.Seq]
       .filterNot(_._1 == null)
 
+    val metadata = ResponseMetadata(headers, statusCode, r.getMessage)
+
     val contentEncoding = Option(r.getHeader(HeaderNames.ContentEncoding))
     val charsetFromHeaders = Option(r.getHeader(HeaderNames.ContentType)).flatMap(encodingFromContentType)
 
     val is = wrapInput(r.getStream, contentEncoding)
 
-    val body: Either[Array[Byte], T] = if (StatusCodes.isSuccess(code)) {
-      Right(readResponseBody(is, responseAs, charsetFromHeaders))
+    val body: Either[Array[Byte], T] = if (StatusCodes.isSuccess(statusCode)) {
+      Right(readResponseBody(is, responseAs, charsetFromHeaders, metadata))
     } else {
       Left(r.getBody.getBytes)
     }
 
-    Response(body, code, r.getMessage, headers, Nil)
+    Response(body, statusCode, r.getMessage, headers, Nil)
   }
 
-  private def readResponseBody[T](is: InputStream, responseAs: ResponseAs[T, Nothing], charset: Option[String]): T = {
+  private def readResponseBody[T](
+      is: InputStream,
+      responseAs: ResponseAs[T, Nothing],
+      charset: Option[String],
+      headers: ResponseMetadata): T = {
+
     responseAs match {
       case MappedResponseAs(raw, g) =>
-        g(readResponseBody(is, raw, charset))
+        g(readResponseBody(is, raw, charset, headers), headers)
 
       case IgnoreResponse =>
-      // nothing to do?
+        @tailrec def consume(): Unit = if (is.read() != -1) consume()
+        consume()
 
       case ResponseAsString(encoding) =>
         Source.fromInputStream(is, charset.getOrElse(encoding)).mkString

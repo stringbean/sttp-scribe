@@ -1,12 +1,12 @@
 name := "sttp-scribe"
 organization := "software.purpledragon"
 
-scalaVersion := "2.12.7"
+scalaVersion := "2.12.8"
 crossScalaVersions := Seq(scalaVersion.value, "2.11.12")
 
 libraryDependencies ++= Seq(
-  "com.softwaremill.sttp" %% "core"             % "1.3.9",
-  "com.github.scribejava" %  "scribejava-apis"  % "6.0.0",
+  "com.softwaremill.sttp" %% "core"             % "1.5.9",
+  "com.github.scribejava" %  "scribejava-apis"  % "6.3.0",
   "org.scalatest"         %% "scalatest"        % "3.0.5"   % Test
 )
 
