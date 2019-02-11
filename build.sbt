@@ -26,3 +26,24 @@ bintrayPackageLabels := Seq("sttp", "scribe", "oauth")
 useGpg := true
 usePgpKeyHex("B19D7A14F6F8B3BFA9FF655A5216B5A5F723A92D")
 pgpSecretRing := pgpPublicRing.value
+
+import ReleaseTransformations._
+import ReleasePlugin.runtimeVersion
+
+releaseCrossBuild := true
+releasePublishArtifactsAction := PgpKeys.publishSigned.value
+releaseTagName := s"v.${runtimeVersion.value}"
+
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  setReleaseVersion,
+  commitReleaseVersion,
+  tagRelease,
+  publishArtifacts,
+  setNextVersion,
+  commitNextVersion,
+  pushChanges
+)

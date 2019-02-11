@@ -4,6 +4,7 @@ addSbtPlugin("de.heikoseeberger" % "sbt-header" % "5.1.0")
 // artifact publishing
 addSbtPlugin("org.foundweekends" % "sbt-bintray" % "0.5.4")
 addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.1.2-1")
+addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.11")
 
 // artifact fetching
 addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.3")
