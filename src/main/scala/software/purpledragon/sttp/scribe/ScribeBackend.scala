@@ -154,11 +154,14 @@ abstract class ScribeBackend(service: OAuthService) extends SttpBackend[Id, Noth
         contentType.foreach(request.addHeader("Content-Type", _))
 
       case InputStreamBody(_, _) =>
-        ???
-      case StreamBody(content) =>
-        ???
-      case MultipartBody(parts) =>
-        ???
+        throw new UnsupportedOperationException("scribe does not support InputStream bodies")
+
+      case StreamBody(_) =>
+        throw new UnsupportedOperationException("scribe does not support Stream bodies")
+
+      case MultipartBody(_) =>
+        throw new UnsupportedOperationException("scribe does not support Multipart bodies")
+
       case NoBody =>
       // nothing to set
     }
