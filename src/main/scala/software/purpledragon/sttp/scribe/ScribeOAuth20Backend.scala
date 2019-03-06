@@ -24,12 +24,12 @@ class ScribeOAuth20Backend(service: OAuth20Service, tokenProvider: OAuth2TokenPr
   private var oauthToken: Option[OAuth2AccessToken] = None
 
   override protected def signRequest(request: OAuthRequest): Unit = {
-    service.signRequest(tokenMeh, request)
+    service.signRequest(currentToken, request)
   }
 
   override protected def renewAccessToken(response: Response): Boolean = {
     try {
-      val newToken = service.refreshAccessToken(tokenMeh.getRefreshToken)
+      val newToken = service.refreshAccessToken(currentToken.getRefreshToken)
       tokenProvider.tokenRenewed(newToken)
       oauthToken = Some(newToken)
       true
@@ -39,7 +39,7 @@ class ScribeOAuth20Backend(service: OAuth20Service, tokenProvider: OAuth2TokenPr
     }
   }
 
-  private def tokenMeh: OAuth2AccessToken = {
+  private def currentToken: OAuth2AccessToken = {
     if (oauthToken.isEmpty) {
       oauthToken = Some(tokenProvider.accessTokenForRequest)
     }
