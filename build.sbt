@@ -5,9 +5,9 @@ scalaVersion := "2.12.8"
 crossScalaVersions := Seq(scalaVersion.value, "2.11.12")
 
 libraryDependencies ++= Seq(
-  "com.softwaremill.sttp" %% "core"             % "1.5.9",
+  "com.softwaremill.sttp" %% "core"             % "1.5.11",
   "com.github.scribejava" %  "scribejava-apis"  % "6.3.0",
-  "org.scalatest"         %% "scalatest"        % "3.0.5"   % Test
+  "org.scalatest"         %% "scalatest"        % "3.0.6"   % Test
 )
 
 headerLicense := Some(HeaderLicense.ALv2("2018", "Michael Stringer"))
