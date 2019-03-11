@@ -77,7 +77,7 @@ abstract class ScribeBackend(service: OAuthService) extends SttpBackend[Id, Noth
     val body: Either[Array[Byte], T] = if (StatusCodes.isSuccess(statusCode)) {
       Right(readResponseBody(is, responseAs, charsetFromHeaders, metadata))
     } else {
-      Left(r.getBody.getBytes)
+      Left(toByteArray(is))
     }
 
     Response(body, statusCode, r.getMessage, headers, Nil)
