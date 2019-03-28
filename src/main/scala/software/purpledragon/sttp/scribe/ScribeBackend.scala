@@ -136,22 +136,18 @@ abstract class ScribeBackend(service: OAuthService) extends SttpBackend[Id, Noth
 
   private def setRequestPayload(body: RequestBody[_], request: OAuthRequest): Unit = {
     body match {
-      case StringBody(content, encoding, contentType) =>
+      case StringBody(content, encoding, _) =>
         request.setPayload(content)
         request.setCharset(encoding)
-        contentType.foreach(request.addHeader("Content-Type", _))
 
-      case ByteArrayBody(content, contentType) =>
+      case ByteArrayBody(content, _) =>
         request.setPayload(content)
-        contentType.foreach(request.addHeader("Content-Type", _))
 
-      case ByteBufferBody(content, contentType) =>
+      case ByteBufferBody(content, _) =>
         request.setPayload(content.array())
-        contentType.foreach(request.addHeader("Content-Type", _))
 
-      case FileBody(content, contentType) =>
+      case FileBody(content, _) =>
         request.setPayload(content.toFile)
-        contentType.foreach(request.addHeader("Content-Type", _))
 
       case InputStreamBody(_, _) =>
         throw new UnsupportedOperationException("scribe does not support InputStream bodies")
