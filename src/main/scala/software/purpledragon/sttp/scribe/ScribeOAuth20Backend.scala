@@ -52,3 +52,21 @@ trait OAuth2TokenProvider {
   def accessTokenForRequest: OAuth2AccessToken
   def tokenRenewed(newToken: OAuth2AccessToken): Unit
 }
+
+object OAuth2TokenProvider {
+
+  /**
+    * Basic [[OAuth2TokenProvider]] for situations where you don't need to store any renewed tokens. Think *very*
+    * carefully before using this token provider!
+    *
+    * @param token initial access token to use.
+    */
+  def basicProviderFor(token: OAuth2AccessToken): OAuth2TokenProvider = {
+    new OAuth2TokenProvider() {
+      private var current: OAuth2AccessToken = token
+
+      override def accessTokenForRequest: OAuth2AccessToken = current
+      override def tokenRenewed(newToken: OAuth2AccessToken): Unit = current = newToken
+    }
+  }
+}
