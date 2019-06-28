@@ -59,7 +59,6 @@ abstract class ScribeBackend(service: OAuthService) extends SttpBackend[Id, Noth
   protected def renewAccessToken(response: ScribeResponse): Boolean
 
   private def handleResponse[T](r: ScribeResponse, responseAs: ResponseAs[T, Nothing]): Response[T] = {
-
     val statusCode = r.getCode
 
     // scribe includes the status line as a header with a key of 'null' :-(

@@ -20,7 +20,10 @@ import com.github.scribejava.core.exceptions.OAuthException
 import com.github.scribejava.core.model.{OAuth2AccessToken, OAuthRequest, Response}
 import com.github.scribejava.core.oauth.OAuth20Service
 
-class ScribeOAuth20Backend(service: OAuth20Service, tokenProvider: OAuth2TokenProvider) extends ScribeBackend(service) {
+class ScribeOAuth20Backend(service: OAuth20Service, tokenProvider: OAuth2TokenProvider)
+    extends ScribeBackend(service)
+    with Logging {
+
   private var oauthToken: Option[OAuth2AccessToken] = None
 
   override protected def signRequest(request: OAuthRequest): Unit = {
@@ -29,12 +32,14 @@ class ScribeOAuth20Backend(service: OAuth20Service, tokenProvider: OAuth2TokenPr
 
   override protected def renewAccessToken(response: Response): Boolean = {
     try {
+      logger.debug("Renewing access token for request")
       val newToken = service.refreshAccessToken(currentToken.getRefreshToken)
       tokenProvider.tokenRenewed(newToken)
       oauthToken = Some(newToken)
       true
     } catch {
-      case _: OAuthException =>
+      case oae: OAuthException =>
+        logger.warn("Error while renewing OAuth token", oae)
         false
     }
   }
