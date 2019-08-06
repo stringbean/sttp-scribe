@@ -2,13 +2,14 @@ name := "sttp-scribe"
 organization := "software.purpledragon"
 
 scalaVersion := "2.12.8"
-crossScalaVersions := Seq(scalaVersion.value, "2.11.12")
+crossScalaVersions := Seq(scalaVersion.value, "2.11.12", "2.13.0")
 
 libraryDependencies ++= Seq(
-  "org.slf4j"             %  "slf4j-api"        % "1.7.26",
-  "com.softwaremill.sttp" %% "core"             % "1.5.11",
-  "com.github.scribejava" %  "scribejava-apis"  % "6.3.0",
-  "org.scalatest"         %% "scalatest"        % "3.0.6"   % Test
+  "org.slf4j"               %  "slf4j-api"                % "1.7.26",
+  "com.softwaremill.sttp"   %% "core"                     % "1.6.2",
+  "com.github.scribejava"   %  "scribejava-apis"          % "6.3.0",
+  "org.scala-lang.modules"  %% "scala-collection-compat"  % "2.1.1",
+  "org.scalatest"           %% "scalatest"                % "3.0.8"   % Test
 )
 
 headerLicense := Some(HeaderLicense.ALv2("2018", "Michael Stringer"))

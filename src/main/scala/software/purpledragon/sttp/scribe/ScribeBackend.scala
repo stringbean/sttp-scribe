@@ -24,9 +24,10 @@ import com.github.scribejava.core.oauth.OAuthService
 import com.softwaremill.sttp._
 import com.softwaremill.sttp.internal.SttpFile
 
+import scala.collection.compat._
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
-import scala.collection.immutable
+import scala.collection.{immutable, mutable}
 import scala.io.Source
 import scala.language.higherKinds
 
@@ -52,7 +53,7 @@ abstract class ScribeBackend(service: OAuthService) extends SttpBackend[Id, Noth
     }
   }
 
-  override def close(): Unit = Unit
+  override def close(): Unit = ()
   override def responseMonad: MonadError[Id] = IdMonad
 
   protected def signRequest(request: OAuthRequest): Unit
@@ -63,7 +64,7 @@ abstract class ScribeBackend(service: OAuthService) extends SttpBackend[Id, Noth
 
     // scribe includes the status line as a header with a key of 'null' :-(
     val headers = r.getHeaders.asScala
-      .to[immutable.Seq]
+      .to(immutable.Seq)
       .filterNot(_._1 == null)
 
     val metadata = ResponseMetadata(headers, statusCode, r.getMessage)
