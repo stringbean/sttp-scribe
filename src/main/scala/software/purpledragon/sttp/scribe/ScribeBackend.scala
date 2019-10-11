@@ -24,12 +24,12 @@ import com.github.scribejava.core.oauth.OAuthService
 import com.softwaremill.sttp._
 import com.softwaremill.sttp.internal.SttpFile
 
-import scala.collection.compat._
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 import scala.collection.{immutable, mutable}
 import scala.io.Source
 import scala.language.higherKinds
+import java.net.URLDecoder
 
 abstract class ScribeBackend(service: OAuthService) extends SttpBackend[Id, Nothing] {
   override def send[T](request: Request[T, Nothing]): Id[Response[T]] = {
@@ -39,7 +39,10 @@ abstract class ScribeBackend(service: OAuthService) extends SttpBackend[Id, Noth
       case (name, value) => oAuthRequest.addHeader(name, value)
     }
 
-    setRequestPayload(request.body, oAuthRequest)
+    val contentType: Option[String] = request.headers
+      .find(_._1.equalsIgnoreCase(HeaderNames.ContentType))
+      .map(_._2.takeWhile(_ != ';'))
+    setRequestPayload(request.body, contentType, oAuthRequest)
 
     signRequest(oAuthRequest)
 
@@ -64,7 +67,7 @@ abstract class ScribeBackend(service: OAuthService) extends SttpBackend[Id, Noth
 
     // scribe includes the status line as a header with a key of 'null' :-(
     val headers = r.getHeaders.asScala
-      .to(immutable.Seq)
+      .toList
       .filterNot(_._1 == null)
 
     val metadata = ResponseMetadata(headers, statusCode, r.getMessage)
@@ -134,8 +137,16 @@ abstract class ScribeBackend(service: OAuthService) extends SttpBackend[Id, Noth
       }
   }
 
-  private def setRequestPayload(body: RequestBody[_], request: OAuthRequest): Unit = {
+  private def setRequestPayload(body: RequestBody[_], contentType: Option[String], request: OAuthRequest): Unit = {
     body match {
+      case StringBody(content, encoding, _) if contentType == Some(MediaTypes.Form) =>
+        // have to add these as "body parameters" so that they get included in the oauth signature
+        val FormParam = "(.*)=(.*)".r
+        val bodyParams: Seq[(String, String)] = content.split("&").collect {
+          case FormParam(key, value) => (URLDecoder.decode(key, encoding), URLDecoder.decode(value, encoding))
+        }
+        bodyParams.foreach(p => request.addBodyParameter(p._1, p._2))
+
       case StringBody(content, encoding, _) =>
         request.setPayload(content)
         request.setCharset(encoding)
