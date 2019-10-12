@@ -1,19 +1,20 @@
 language: scala
 sudo: false
 
-scala:
-  - 2.12.6
-  - 2.11.12
-
 jdk:
-  - oraclejdk8
+  - openjdk8
+  - openjdk11
 
-# cache config taken from http://www.scala-sbt.org/1.x/docs/Travis-CI-with-sbt.html
 cache:
   directories:
-    - $HOME/.ivy2/cache
+    - $HOME/.cache
     - $HOME/.sbt
 
 before_cache:
-  - find $HOME/.ivy2 -name "ivydata-*.properties" -delete
+  - find $HOME/.cache -name "ivydata-*.properties" -delete
   - find $HOME/.sbt -name "*.lock" -delete
+
+jobs:
+  include:
+    - stage: Test
+      script: sbt +test
