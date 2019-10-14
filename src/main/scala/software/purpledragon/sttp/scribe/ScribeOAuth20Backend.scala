@@ -53,10 +53,7 @@ class ScribeOAuth20Backend(service: OAuth20Service, tokenProvider: OAuth2TokenPr
   }
 }
 
-trait OAuth2TokenProvider {
-  def accessTokenForRequest: OAuth2AccessToken
-  def tokenRenewed(newToken: OAuth2AccessToken): Unit
-}
+trait OAuth2TokenProvider extends OAuthTokenProvider[OAuth2AccessToken]
 
 object OAuth2TokenProvider {
 
