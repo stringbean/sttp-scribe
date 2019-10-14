@@ -19,7 +19,7 @@ package software.purpledragon.sttp.scribe
 import java.io.{FileOutputStream, IOException, InputStream, UnsupportedEncodingException}
 import java.util.zip.{GZIPInputStream, InflaterInputStream}
 
-import com.github.scribejava.core.model.{OAuthRequest, Verb, Response => ScribeResponse}
+import com.github.scribejava.core.model.{OAuthRequest, Verb, Response => ScribeResponse, Token}
 import com.github.scribejava.core.oauth.OAuthService
 import com.softwaremill.sttp._
 import com.softwaremill.sttp.internal.SttpFile
@@ -196,4 +196,9 @@ abstract class ScribeBackend(service: OAuthService) extends SttpBackend[Id, Noth
     }
   }
 
+}
+
+trait OAuthTokenProvider[T <: Token] {
+  def accessTokenForRequest: T
+  def tokenRenewed(token: T): Unit
 }

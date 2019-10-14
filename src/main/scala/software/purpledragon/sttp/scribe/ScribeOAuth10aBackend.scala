@@ -16,22 +16,55 @@
 
 package software.purpledragon.sttp.scribe
 
-import com.github.scribejava.core.model.{OAuth1AccessToken, OAuthRequest, Response}
+import com.github.scribejava.core.model.{OAuth1AccessToken, OAuthRequest, Response, Verb}
 import com.github.scribejava.core.oauth.OAuth10aService
+import com.github.scribejava.core.exceptions.OAuthException
 
 class ScribeOAuth10aBackend(service: OAuth10aService, tokenProvider: OAuth1TokenProvider)
-    extends ScribeBackend(service) {
+    extends ScribeBackend(service)
+    with Logging {
+
+  private var oauthToken: Option[OAuth1AccessToken] = None
 
   override protected def signRequest(request: OAuthRequest): Unit = {
-    service.signRequest(tokenProvider.accessTokenForRequest, request)
+    service.signRequest(currentToken, request)
   }
 
   override protected def renewAccessToken(response: Response): Boolean = {
-    // should be covered by request token
-    false
+    try {
+      logger.debug("Renewing access token for request")
+      val api = service.getApi
+      val request = new OAuthRequest(Verb.GET, api.getAccessTokenEndpoint)
+
+      tokenProvider.prepareTokenRenewalRequest(request)
+      service.signRequest(currentToken, request)
+
+      val response = service.execute(request)
+      val newToken = api.getAccessTokenExtractor.extract(response)
+
+      tokenProvider.tokenRenewed(newToken)
+      oauthToken = Some(newToken)
+      true
+    } catch {
+      case oae: OAuthException =>
+        logger.warn("Error while renewing OAuth token")
+        false
+    }
+  }
+
+  private def currentToken: OAuth1AccessToken = {
+    if (oauthToken.isEmpty) {
+      oauthToken = Some(tokenProvider.accessTokenForRequest)
+    }
+
+    oauthToken.get
   }
 }
 
-trait OAuth1TokenProvider {
-  def accessTokenForRequest: OAuth1AccessToken
+trait OAuth1TokenProvider extends OAuthTokenProvider[OAuth1AccessToken] {
+
+  /**
+    * Add any additional required parameters to a request to renew an access token.
+    */
+  def prepareTokenRenewalRequest(request: OAuthRequest): Unit = ()
 }
