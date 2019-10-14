@@ -8,7 +8,6 @@ libraryDependencies ++= Seq(
   "org.slf4j"               %  "slf4j-api"                % "1.7.26",
   "com.softwaremill.sttp"   %% "core"                     % "1.6.2",
   "com.github.scribejava"   %  "scribejava-apis"          % "6.3.0",
-  "org.scala-lang.modules"  %% "scala-collection-compat"  % "2.1.1",
   "org.scalatest"           %% "scalatest"                % "3.0.8"   % Test
 )
 
