@@ -17,13 +17,14 @@
 package software.purpledragon.sttp
 
 import java.io.{ByteArrayOutputStream, InputStream, OutputStream}
+import scala.util.Try
 
 package object scribe {
   private[sttp] def transfer(is: InputStream, os: OutputStream): Unit = {
     val buffer = new Array[Byte](1024)
 
     Iterator
-      .continually(is.read(buffer))
+      .continually(Try(is.read(buffer)).getOrElse(-1))
       .takeWhile(_ != -1)
       .foreach(count => os.write(buffer, 0, count))
   }

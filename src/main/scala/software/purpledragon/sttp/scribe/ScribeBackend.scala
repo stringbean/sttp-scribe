@@ -28,7 +28,6 @@ import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 import scala.collection.{immutable, mutable}
 import scala.io.Source
-import scala.util.Try
 import scala.language.higherKinds
 import java.net.URLDecoder
 
@@ -81,7 +80,7 @@ abstract class ScribeBackend(service: OAuthService) extends SttpBackend[Id, Noth
     val body: Either[Array[Byte], T] = if (StatusCodes.isSuccess(statusCode)) {
       Right(readResponseBody(is, responseAs, charsetFromHeaders, metadata))
     } else {
-      val bytes = Try(toByteArray(is)).getOrElse(Array.emptyByteArray)
+      val bytes = toByteArray(is)
       Left(bytes)
     }
 
