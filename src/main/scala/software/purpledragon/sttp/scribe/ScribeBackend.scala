@@ -30,11 +30,16 @@ import scala.collection.{immutable, mutable}
 import scala.io.Source
 import scala.language.higherKinds
 import java.net.URLDecoder
+import com.github.scribejava.core.utils.OAuthEncoder
 
 abstract class ScribeBackend(service: OAuthService) extends SttpBackend[Id, Nothing] {
   override def send[T](request: Request[T, Nothing]): Id[Response[T]] = {
-    val oAuthRequest = new OAuthRequest(method2Verb(request.method), request.uri.toString())
+    val urlWithoutParams = request.uri.copy(queryFragments = Nil).toString
+    val oAuthRequest = new OAuthRequest(method2Verb(request.method), urlWithoutParams)
 
+    request.uri.paramsSeq foreach {
+      case (name, value) => oAuthRequest.addQuerystringParameter(name, value)
+    }
     request.headers foreach {
       case (name, value) => oAuthRequest.addHeader(name, value)
     }
