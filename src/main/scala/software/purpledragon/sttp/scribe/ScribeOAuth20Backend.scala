@@ -19,13 +19,19 @@ package software.purpledragon.sttp.scribe
 import com.github.scribejava.core.exceptions.OAuthException
 import com.github.scribejava.core.model.{OAuth2AccessToken, OAuthRequest, Response}
 import com.github.scribejava.core.oauth.OAuth20Service
+import software.purpledragon.sttp.scribe.QueryParamEncodingStyle.Sttp
 
 class ScribeOAuth20Backend(
     service: OAuth20Service,
     tokenProvider: OAuth2TokenProvider,
-    grantType: OAuth2GrantType = OAuth2GrantType.AuthorizationCode) extends ScribeBackend(service) with Logging {
+    grantType: OAuth2GrantType = OAuth2GrantType.AuthorizationCode,
+    encodingStyle: QueryParamEncodingStyle = Sttp) extends ScribeBackend(service, encodingStyle) with Logging {
 
   private var oauthToken: Option[OAuth2AccessToken] = None
+
+  override final def withEncodingStyle(style: QueryParamEncodingStyle): ScribeOAuth20Backend = {
+    new ScribeOAuth20Backend(service, tokenProvider, grantType, style)
+  }
 
   override protected def signRequest(request: OAuthRequest): Unit = {
     service.signRequest(currentToken, request)

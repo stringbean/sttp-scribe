@@ -31,13 +31,27 @@ import scala.io.Source
 import scala.language.higherKinds
 import java.net.URLDecoder
 import com.github.scribejava.core.utils.OAuthEncoder
+import software.purpledragon.sttp.scribe.QueryParamEncodingStyle._
 
-abstract class ScribeBackend(service: OAuthService) extends SttpBackend[Id, Nothing] {
+abstract class ScribeBackend(service: OAuthService,
+                             encodingStyle: QueryParamEncodingStyle = Sttp) extends SttpBackend[Id, Nothing] {
+
+  /**
+    * Url query parameter encoding is handled slightly differently by sttp and scribe. This allows
+    * you to configure which implementation the backend should use.
+    */
+  def withEncodingStyle(encodingStyle: QueryParamEncodingStyle): ScribeBackend
+
   override def send[T](request: Request[T, Nothing]): Id[Response[T]] = {
-    val urlWithoutParams = request.uri.copy(queryFragments = Nil).toString
-    val oAuthRequest = new OAuthRequest(method2Verb(request.method), urlWithoutParams)
+    val (url, params) = encodingStyle match {
+      case Sttp =>
+        (request.uri.toString, Nil)
+      case Scribe =>
+        (request.uri.copy(queryFragments = Nil).toString, request.uri.paramsSeq)
+    }
+    val oAuthRequest = new OAuthRequest(method2Verb(request.method), url)
 
-    request.uri.paramsSeq foreach {
+    params foreach {
       case (name, value) => oAuthRequest.addQuerystringParameter(name, value)
     }
     request.headers foreach {
@@ -207,4 +221,11 @@ abstract class ScribeBackend(service: OAuthService) extends SttpBackend[Id, Noth
 trait OAuthTokenProvider[T <: Token] {
   def accessTokenForRequest: T
   def tokenRenewed(token: T): Unit
+}
+
+sealed trait QueryParamEncodingStyle
+
+object QueryParamEncodingStyle {
+  case object Sttp extends QueryParamEncodingStyle
+  case object Scribe extends QueryParamEncodingStyle
 }
