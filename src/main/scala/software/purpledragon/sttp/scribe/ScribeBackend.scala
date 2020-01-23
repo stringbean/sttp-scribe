@@ -33,8 +33,8 @@ import java.net.URLDecoder
 import com.github.scribejava.core.utils.OAuthEncoder
 import software.purpledragon.sttp.scribe.QueryParamEncodingStyle._
 
-abstract class ScribeBackend(service: OAuthService,
-                             encodingStyle: QueryParamEncodingStyle = Sttp) extends SttpBackend[Id, Nothing] {
+abstract class ScribeBackend(service: OAuthService, encodingStyle: QueryParamEncodingStyle = Sttp)
+    extends SttpBackend[Id, Nothing] {
 
   /**
     * Url query parameter encoding is handled slightly differently by sttp and scribe. This allows
@@ -85,8 +85,7 @@ abstract class ScribeBackend(service: OAuthService,
     val statusCode = r.getCode
 
     // scribe includes the status line as a header with a key of 'null' :-(
-    val headers = r.getHeaders.asScala
-      .toList
+    val headers = r.getHeaders.asScala.toList
       .filterNot(_._1 == null)
 
     val metadata = ResponseMetadata(headers, statusCode, r.getMessage)
@@ -110,7 +109,8 @@ abstract class ScribeBackend(service: OAuthService,
       is: InputStream,
       responseAs: ResponseAs[T, Nothing],
       charset: Option[String],
-      headers: ResponseMetadata): T = {
+      headers: ResponseMetadata
+  ): T = {
 
     responseAs match {
       case MappedResponseAs(raw, g) =>

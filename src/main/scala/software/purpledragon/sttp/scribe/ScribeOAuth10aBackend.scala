@@ -21,9 +21,12 @@ import com.github.scribejava.core.oauth.OAuth10aService
 import com.github.scribejava.core.exceptions.OAuthException
 import software.purpledragon.sttp.scribe.QueryParamEncodingStyle.Sttp
 
-class ScribeOAuth10aBackend(service: OAuth10aService,
-                            tokenProvider: OAuth1TokenProvider,
-                            encodingStyle: QueryParamEncodingStyle = Sttp) extends ScribeBackend(service) with Logging {
+class ScribeOAuth10aBackend(
+    service: OAuth10aService,
+    tokenProvider: OAuth1TokenProvider,
+    encodingStyle: QueryParamEncodingStyle = Sttp
+) extends ScribeBackend(service)
+    with Logging {
 
   private var oauthToken: Option[OAuth1AccessToken] = None
 

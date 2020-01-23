@@ -25,7 +25,9 @@ class ScribeOAuth20Backend(
     service: OAuth20Service,
     tokenProvider: OAuth2TokenProvider,
     grantType: OAuth2GrantType = OAuth2GrantType.AuthorizationCode,
-    encodingStyle: QueryParamEncodingStyle = Sttp) extends ScribeBackend(service, encodingStyle) with Logging {
+    encodingStyle: QueryParamEncodingStyle = Sttp
+) extends ScribeBackend(service, encodingStyle)
+    with Logging {
 
   private var oauthToken: Option[OAuth2AccessToken] = None
 
