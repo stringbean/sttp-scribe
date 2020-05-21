@@ -16,9 +16,9 @@
 
 package software.purpledragon.sttp.scribe
 
+import com.github.scribejava.core.exceptions.OAuthException
 import com.github.scribejava.core.model.{OAuth1AccessToken, OAuthRequest, Response, Verb}
 import com.github.scribejava.core.oauth.OAuth10aService
-import com.github.scribejava.core.exceptions.OAuthException
 import software.purpledragon.sttp.scribe.QueryParamEncodingStyle.Sttp
 
 class ScribeOAuth10aBackend(
@@ -75,4 +75,22 @@ trait OAuth1TokenProvider extends OAuthTokenProvider[OAuth1AccessToken] {
     * Add any additional required parameters to a request to renew an access token.
     */
   def prepareTokenRenewalRequest(request: OAuthRequest): Unit = ()
+}
+
+object OAuth1TokenProvider {
+
+  /**
+    * Basic [[OAuth1TokenProvider]] for situations where you don't need to store any renewed tokens. Think *very*
+    * carefully before using this token provider!
+    *
+    * @param token initial access token to use.
+    */
+  def basicProviderFor(token: OAuth1AccessToken): OAuth1TokenProvider = {
+    new OAuth1TokenProvider() {
+      private var current: OAuth1AccessToken = token
+
+      override def accessTokenForRequest: OAuth1AccessToken = current
+      override def tokenRenewed(newToken: OAuth1AccessToken): Unit = current = newToken
+    }
+  }
 }
