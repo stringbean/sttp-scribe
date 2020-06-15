@@ -208,7 +208,7 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
       new ScribeOAuth20Backend(oauthService, tokenProvider, grantType = OAuth2GrantType.ClientCredentials)
 
     (tokenProvider.tokenRenewed _).expects(*)
-    (oauthService.getAccessTokenClientCredentialsGrant _).expects().returning(updatedToken)
+    (oauthService.getAccessTokenClientCredentialsGrant: () => OAuth2AccessToken).expects().returning(updatedToken)
     (oauthService.signRequest(_: OAuth2AccessToken, _: OAuthRequest)).expects(updatedToken, capture(requestCaptor))
 
     stubResponses(
@@ -239,7 +239,9 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
     override protected implicit val backend: SttpBackend[Identity, Nothing, NothingT] =
       new ScribeOAuth20Backend(oauthService, tokenProvider, grantType = OAuth2GrantType.ClientCredentials)
 
-    (oauthService.getAccessTokenClientCredentialsGrant _).expects().throws(new OAuthException("Failed"))
+    (oauthService.getAccessTokenClientCredentialsGrant: () => OAuth2AccessToken)
+      .expects()
+      .throws(new OAuthException("Failed"))
 
     stubResponses(
       StringBodyResponse(

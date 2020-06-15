@@ -18,7 +18,13 @@ libraryDependencies ++= Seq(
 )
 // format: on
 
-scalacOptions += "-Ypartial-unification"
+scalacOptions ++= {
+  if (scalaVersion.value.startsWith("2.13")) {
+    Nil
+  } else {
+    Seq("-Ypartial-unification")
+  }
+}
 
 headerLicense := Some(HeaderLicense.ALv2("2018", "Michael Stringer"))
 licenses += ("Apache-2.0", url("https://opensource.org/licenses/Apache-2.0"))
