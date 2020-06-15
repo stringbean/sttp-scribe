@@ -1,5 +1,6 @@
 // code style
 addSbtPlugin("de.heikoseeberger" % "sbt-header" % "5.6.0")
+addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "1.0.0")
 
 // artifact publishing
 addSbtPlugin("org.foundweekends" % "sbt-bintray" % "0.5.4")
