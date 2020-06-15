@@ -16,11 +16,22 @@
 
 package software.purpledragon.sttp.scribe
 
-import com.github.scribejava.core.model.OAuth2AccessToken
+import com.github.scribejava.core.model.{OAuth1AccessToken, OAuth2AccessToken}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-class OAuth2TokenProviderSpec extends AnyFlatSpec with Matchers {
+class TokenProvidersSpec extends AnyFlatSpec with Matchers {
+
+  "OAuth1TokenProvider.basicProviderFor" should "create a provider that maintains a token" in {
+    val token1 = new OAuth1AccessToken("token-1", "secret-1")
+    val token2 = new OAuth1AccessToken("token-2", "secret-2")
+
+    val provider = OAuth1TokenProvider.basicProviderFor(token1)
+    provider.accessTokenForRequest shouldBe token1
+
+    provider.tokenRenewed(token2)
+    provider.accessTokenForRequest shouldBe token2
+  }
 
   "OAuth2TokenProvider.basicProviderFor" should "create a provider that maintains a token" in {
     val token1 = new OAuth2AccessToken("token-1")

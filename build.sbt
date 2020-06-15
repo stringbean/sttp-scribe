@@ -15,6 +15,7 @@ libraryDependencies ++= Seq(
   "org.scala-lang.modules"        %% "scala-collection-compat"  % "2.1.6"   % Test,
   "commons-io"                    %  "commons-io"               % "2.7"     % Test,
   "org.apache.commons"            %  "commons-lang3"            % "3.10"    % Test,
+  "ch.qos.logback"                %  "logback-classic"          % "1.2.3"   % Test,
 )
 // format: on
 

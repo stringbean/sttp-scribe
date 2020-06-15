@@ -71,7 +71,7 @@ trait ScribeHelpers extends MockFactory with Matchers {
     val status: ResponseStatus
     val headers: Map[String, String]
 
-    def stream: InputStream
+//    def stream: InputStream
 
     def toResponse: ScribeResponse = {
       val response: ScribeResponse = mock[ScribeResponse]
@@ -87,18 +87,40 @@ trait ScribeHelpers extends MockFactory with Matchers {
         })
         .anyNumberOfTimes
 
-      (response.getStream _).expects().returning(stream).anyNumberOfTimes()
+      stubBody(response)
+
 
       response
     }
+
+    protected def stubBody(response: ScribeResponse): Unit
   }
 
-  case class StringBodyResponse(
+  case class StringStreamResponse(
       body: String,
       status: ResponseStatus = StatusOk,
       headers: Map[String, String] = Map.empty,
       charset: Charset = StandardCharsets.UTF_8
   ) extends TestResponse {
-    override def stream: InputStream = IOUtils.toInputStream(body, charset)
+
+
+//
+//    override def stream: InputStream =
+    override protected def stubBody(response: ScribeResponse): Unit = {
+  val stream = IOUtils.toInputStream(body, charset)
+  (response.getStream _).expects().returning(stream).anyNumberOfTimes()
+
+}
+  }
+
+  case class StringBodyResponse(
+                                   body: String,
+                                   status: ResponseStatus = StatusOk,
+                                   headers: Map[String, String] = Map.empty,
+                                   charset: Charset = StandardCharsets.UTF_8
+                                 ) extends TestResponse {
+    override protected def stubBody(response: ScribeResponse): Unit = {
+      (response.getBody _).expects().returning(body).anyNumberOfTimes()
+    }
   }
 }

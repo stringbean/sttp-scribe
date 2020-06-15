@@ -25,7 +25,7 @@ class ScribeOAuth10aBackend(
     service: OAuth10aService,
     tokenProvider: OAuth1TokenProvider,
     encodingStyle: QueryParamEncodingStyle = Sttp
-) extends ScribeBackend(service)
+) extends ScribeBackend(service, encodingStyle)
     with Logging {
 
   private var oauthToken: Option[OAuth1AccessToken] = None

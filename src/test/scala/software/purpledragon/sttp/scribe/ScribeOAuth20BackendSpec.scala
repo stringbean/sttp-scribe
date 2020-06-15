@@ -31,7 +31,7 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
   "ScribeOAuth20Backend" should "send get request" in new ScribeOAuth20Fixture {
     // given
     stubResponses(
-      StringBodyResponse("OK")
+      StringStreamResponse("OK")
     )
 
     // when
@@ -51,7 +51,7 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
   it should "send get request with query params" in new ScribeOAuth20Fixture {
     // given
     stubResponses(
-      StringBodyResponse("OK")
+      StringStreamResponse("OK")
     )
 
     val qString = "query"
@@ -73,7 +73,7 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
   it should "send post request" in new ScribeOAuth20Fixture {
     // given
     stubResponses(
-      StringBodyResponse("""{ "user": { "id": 1, "name": "John" }}""")
+      StringStreamResponse("""{ "user": { "id": 1, "name": "John" }}""")
     )
 
     val requestBody = """{ "user": { "name": "John" }}"""
@@ -106,7 +106,7 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
   it should "pass through 404 response" in new ScribeOAuth20Fixture {
     // given
     stubResponses(
-      StringBodyResponse("Test not found", status = StatusNotFound)
+      StringStreamResponse("Test not found", status = StatusNotFound)
     )
 
     // when
@@ -130,11 +130,11 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
     (oauthService.signRequest(_: OAuth2AccessToken, _: OAuthRequest)).expects(updatedToken, capture(requestCaptor))
 
     stubResponses(
-      StringBodyResponse(
+      StringStreamResponse(
         """{"error": "invalid_token","error_description": "The access token expired"}""",
         status = StatusUnauthorized
       ),
-      StringBodyResponse("OK")
+      StringStreamResponse("OK")
     )
 
     // when
@@ -157,7 +157,7 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
     (oauthService.refreshAccessToken(_: String)).expects("refresh-token").throws(new OAuthException("Failed"))
 
     stubResponses(
-      StringBodyResponse(
+      StringStreamResponse(
         """{"error": "invalid_token","error_description": "The access token expired"}""",
         status = StatusUnauthorized
       )
@@ -177,30 +177,31 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
     )
   }
 
-  "ScribeOAuth20Backend(encodingStyle = Scribe)" should "send get request with query params" in new ScribeOAuth20Fixture {
-    // given
-    override protected implicit val backend: SttpBackend[Identity, Nothing, NothingT] =
-      new ScribeOAuth20Backend(oauthService, tokenProvider, encodingStyle = QueryParamEncodingStyle.Scribe)
+  "ScribeOAuth20Backend(encodingStyle = Scribe)" should "send get request with query params" in
+    new ScribeOAuth20Fixture {
+      // given
+      override protected implicit val backend: SttpBackend[Identity, Nothing, NothingT] =
+        new ScribeOAuth20Backend(oauthService, tokenProvider, encodingStyle = QueryParamEncodingStyle.Scribe)
 
-    stubResponses(
-      StringBodyResponse("OK")
-    )
+      stubResponses(
+        StringStreamResponse("OK")
+      )
 
-    val qString = "query"
+      val qString = "query"
 
-    // when
-    val result: Identity[Response[Either[String, String]]] = basicRequest
-      .get(uri"https://example.com/api/test?q=$qString&f=5")
-      .send()
+      // when
+      val result: Identity[Response[Either[String, String]]] = basicRequest
+        .get(uri"https://example.com/api/test?q=$qString&f=5")
+        .send()
 
-    // then
-    result.code shouldBe StatusCode.Ok
-    result.body shouldBe Right("OK")
+      // then
+      result.code shouldBe StatusCode.Ok
+      result.body shouldBe Right("OK")
 
-    verifyRequests(
-      RequestExpectation("https://example.com/api/test", queryParams = Map("q" -> "query", "f" -> "5"))
-    )
-  }
+      verifyRequests(
+        RequestExpectation("https://example.com/api/test", queryParams = Map("q" -> "query", "f" -> "5"))
+      )
+    }
 
   "ScribeOAuth20Backend(grantType = ClientCredentials)" should "refresh token on 401" in new ScribeOAuth20Fixture {
     // given
@@ -212,11 +213,11 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
     (oauthService.signRequest(_: OAuth2AccessToken, _: OAuthRequest)).expects(updatedToken, capture(requestCaptor))
 
     stubResponses(
-      StringBodyResponse(
+      StringStreamResponse(
         """{"error": "invalid_token","error_description": "The access token expired"}""",
         status = StatusUnauthorized
       ),
-      StringBodyResponse("OK")
+      StringStreamResponse("OK")
     )
 
     // when
@@ -244,7 +245,7 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
       .throws(new OAuthException("Failed"))
 
     stubResponses(
-      StringBodyResponse(
+      StringStreamResponse(
         """{"error": "invalid_token","error_description": "The access token expired"}""",
         status = StatusUnauthorized
       )
