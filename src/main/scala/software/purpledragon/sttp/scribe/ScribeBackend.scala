@@ -150,10 +150,11 @@ abstract class ScribeBackend(
       .split(";")
       .map(_.trim.toLowerCase)
       .collectFirst {
-        case s if s.startsWith("charset=") => s.substring(8)
+        case s if s.startsWith("charset=") => s.substring("charset=".length)
       }
   }
 
+  // scalastyle:off cyclomatic.complexity
   private def setRequestPayload(body: RequestBody[_], contentType: Option[String], request: OAuthRequest): Unit = {
     body match {
       case StringBody(content, encoding, _)
@@ -191,6 +192,7 @@ abstract class ScribeBackend(
       // nothing to set
     }
   }
+  // scalastyle:on
 
   private def method2Verb(method: Method): Verb = {
     method match {

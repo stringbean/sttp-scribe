@@ -27,6 +27,7 @@ import org.scalatest.matchers.should.Matchers
 
 import scala.jdk.CollectionConverters._
 
+// scalastyle:off null
 trait ScribeHelpers extends MockFactory with Matchers {
   this: Suite =>
 
@@ -34,6 +35,7 @@ trait ScribeHelpers extends MockFactory with Matchers {
   val StatusOk: ResponseStatus = (200, "OK")
   val StatusNotFound: ResponseStatus = (404, "Not Found")
   val StatusUnauthorized: ResponseStatus = (401, "Unauthorized")
+
 
   case class RequestExpectation(
       url: String,

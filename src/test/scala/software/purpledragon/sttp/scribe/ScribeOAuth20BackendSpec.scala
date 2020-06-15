@@ -26,6 +26,7 @@ import org.scalatest.matchers.should.Matchers
 import sttp.client._
 import sttp.model.{MediaType, StatusCode}
 
+// scalastyle:off null
 class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactory with ScribeHelpers {
 
   "ScribeOAuth20Backend" should "send get request" in new ScribeOAuth20Fixture {
