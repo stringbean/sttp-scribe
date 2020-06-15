@@ -33,8 +33,11 @@ import scala.collection.JavaConverters._
 import scala.language.higherKinds
 import scala.util.Using
 
-abstract class ScribeBackend(service: OAuthService, encodingStyle: QueryParamEncodingStyle = Sttp)
-    extends SttpBackend[Identity, Nothing, NothingT] {
+abstract class ScribeBackend(
+    service: OAuthService,
+    isTokenExpiredResponse: TokenExpiredResponseCheck,
+    encodingStyle: QueryParamEncodingStyle
+) extends SttpBackend[Identity, Nothing, NothingT] {
 
   /**
     * Url query parameter encoding is handled slightly differently by sttp and scribe. This allows
@@ -67,7 +70,9 @@ abstract class ScribeBackend(service: OAuthService, encodingStyle: QueryParamEnc
 
     val response = service.execute(oAuthRequest)
 
-    if (response.getCode == StatusCode.Unauthorized.code && renewAccessToken(response)) {
+    if (response.getCode == StatusCode.Unauthorized.code && isTokenExpiredResponse(response) && renewAccessToken(
+          response
+        )) {
       // renewed access token - retry the request
       send(request)
     } else {
@@ -77,7 +82,8 @@ abstract class ScribeBackend(service: OAuthService, encodingStyle: QueryParamEnc
 
   override def openWebsocket[T, WS_RESULT](
       request: Request[T, Nothing],
-      handler: NothingT[WS_RESULT]): Identity[WebSocketResponse[WS_RESULT]] = {
+      handler: NothingT[WS_RESULT]
+  ): Identity[WebSocketResponse[WS_RESULT]] = {
     // we don't handle websockets
     handler
   }

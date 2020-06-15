@@ -16,23 +16,42 @@
 
 package software.purpledragon.sttp.scribe
 
+import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.github.scribejava.core.exceptions.OAuthException
 import com.github.scribejava.core.model.{OAuth2AccessToken, OAuthRequest, Response}
 import com.github.scribejava.core.oauth.OAuth20Service
 import software.purpledragon.sttp.scribe.QueryParamEncodingStyle.Sttp
 
+object ScribeOAuth20Backend {
+  private val objectMapper = new ObjectMapper()
+
+  val DefaultTokenExpiredCheck: TokenExpiredResponseCheck = { response =>
+    try {
+      val body: JsonNode = objectMapper.readTree(response.getBody)
+      val error = body.at("/error").asText()
+      error == "invalid_token"
+    } catch {
+      case _: JsonProcessingException =>
+        // not JSON or invalid - assume not an OAuth error
+        false
+    }
+  }
+}
+
 class ScribeOAuth20Backend(
     service: OAuth20Service,
     tokenProvider: OAuth2TokenProvider,
     grantType: OAuth2GrantType = OAuth2GrantType.AuthorizationCode,
+    isTokenExpiredResponse: TokenExpiredResponseCheck = ScribeOAuth20Backend.DefaultTokenExpiredCheck,
     encodingStyle: QueryParamEncodingStyle = Sttp
-) extends ScribeBackend(service, encodingStyle)
+) extends ScribeBackend(service, isTokenExpiredResponse, encodingStyle)
     with Logging {
 
   private var oauthToken: Option[OAuth2AccessToken] = None
 
   override final def withEncodingStyle(style: QueryParamEncodingStyle): ScribeOAuth20Backend = {
-    new ScribeOAuth20Backend(service, tokenProvider, grantType, style)
+    new ScribeOAuth20Backend(service, tokenProvider, grantType, isTokenExpiredResponse, style)
   }
 
   override protected def signRequest(request: OAuthRequest): Unit = {

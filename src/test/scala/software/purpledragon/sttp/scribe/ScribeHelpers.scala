@@ -16,7 +16,6 @@
 
 package software.purpledragon.sttp.scribe
 
-import java.io.InputStream
 import java.nio.charset.{Charset, StandardCharsets}
 
 import com.github.scribejava.core.model.{OAuthRequest, ParameterList, Verb, Response => ScribeResponse}
@@ -71,8 +70,6 @@ trait ScribeHelpers extends MockFactory with Matchers {
     val status: ResponseStatus
     val headers: Map[String, String]
 
-//    def stream: InputStream
-
     def toResponse: ScribeResponse = {
       val response: ScribeResponse = mock[ScribeResponse]
 
@@ -89,37 +86,24 @@ trait ScribeHelpers extends MockFactory with Matchers {
 
       stubBody(response)
 
-
       response
     }
 
     protected def stubBody(response: ScribeResponse): Unit
   }
 
-  case class StringStreamResponse(
+  case class StringResponse(
       body: String,
       status: ResponseStatus = StatusOk,
       headers: Map[String, String] = Map.empty,
       charset: Charset = StandardCharsets.UTF_8
   ) extends TestResponse {
 
-
-//
-//    override def stream: InputStream =
     override protected def stubBody(response: ScribeResponse): Unit = {
-  val stream = IOUtils.toInputStream(body, charset)
-  (response.getStream _).expects().returning(stream).anyNumberOfTimes()
+      val stream = IOUtils.toInputStream(body, charset)
 
-}
-  }
-
-  case class StringBodyResponse(
-                                   body: String,
-                                   status: ResponseStatus = StatusOk,
-                                   headers: Map[String, String] = Map.empty,
-                                   charset: Charset = StandardCharsets.UTF_8
-                                 ) extends TestResponse {
-    override protected def stubBody(response: ScribeResponse): Unit = {
+      // some calls are via the stream, others via the string body
+      (response.getStream _).expects().returning(stream).anyNumberOfTimes()
       (response.getBody _).expects().returning(body).anyNumberOfTimes()
     }
   }

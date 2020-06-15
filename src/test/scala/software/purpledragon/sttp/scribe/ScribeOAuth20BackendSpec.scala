@@ -31,7 +31,7 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
   "ScribeOAuth20Backend" should "send get request" in new ScribeOAuth20Fixture {
     // given
     stubResponses(
-      StringStreamResponse("OK")
+      StringResponse("OK")
     )
 
     // when
@@ -51,7 +51,7 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
   it should "send get request with query params" in new ScribeOAuth20Fixture {
     // given
     stubResponses(
-      StringStreamResponse("OK")
+      StringResponse("OK")
     )
 
     val qString = "query"
@@ -73,7 +73,7 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
   it should "send post request" in new ScribeOAuth20Fixture {
     // given
     stubResponses(
-      StringStreamResponse("""{ "user": { "id": 1, "name": "John" }}""")
+      StringResponse("""{ "user": { "id": 1, "name": "John" }}""")
     )
 
     val requestBody = """{ "user": { "name": "John" }}"""
@@ -106,7 +106,7 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
   it should "pass through 404 response" in new ScribeOAuth20Fixture {
     // given
     stubResponses(
-      StringStreamResponse("Test not found", status = StatusNotFound)
+      StringResponse("Test not found", status = StatusNotFound)
     )
 
     // when
@@ -130,11 +130,11 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
     (oauthService.signRequest(_: OAuth2AccessToken, _: OAuthRequest)).expects(updatedToken, capture(requestCaptor))
 
     stubResponses(
-      StringStreamResponse(
+      StringResponse(
         """{"error": "invalid_token","error_description": "The access token expired"}""",
         status = StatusUnauthorized
       ),
-      StringStreamResponse("OK")
+      StringResponse("OK")
     )
 
     // when
@@ -152,12 +152,35 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
     )
   }
 
+  it should "return 401 if not token expired error" in new ScribeOAuth20Fixture {
+    // given
+    stubResponses(
+      StringResponse(
+        "access denied",
+        status = StatusUnauthorized
+      )
+    )
+
+    // when
+    val result: Identity[Response[Either[String, String]]] = basicRequest
+      .get(uri"https://example.com/api/test")
+      .send()
+
+    // then
+    result.code shouldBe StatusCode.Unauthorized
+    result.body shouldBe Left("access denied")
+
+    verifyRequests(
+      RequestExpectation("https://example.com/api/test")
+    )
+  }
+
   it should "return 401 on token refresh failure" in new ScribeOAuth20Fixture {
     // given
     (oauthService.refreshAccessToken(_: String)).expects("refresh-token").throws(new OAuthException("Failed"))
 
     stubResponses(
-      StringStreamResponse(
+      StringResponse(
         """{"error": "invalid_token","error_description": "The access token expired"}""",
         status = StatusUnauthorized
       )
@@ -184,7 +207,7 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
         new ScribeOAuth20Backend(oauthService, tokenProvider, encodingStyle = QueryParamEncodingStyle.Scribe)
 
       stubResponses(
-        StringStreamResponse("OK")
+        StringResponse("OK")
       )
 
       val qString = "query"
@@ -213,11 +236,11 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
     (oauthService.signRequest(_: OAuth2AccessToken, _: OAuthRequest)).expects(updatedToken, capture(requestCaptor))
 
     stubResponses(
-      StringStreamResponse(
+      StringResponse(
         """{"error": "invalid_token","error_description": "The access token expired"}""",
         status = StatusUnauthorized
       ),
-      StringStreamResponse("OK")
+      StringResponse("OK")
     )
 
     // when
@@ -245,7 +268,7 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
       .throws(new OAuthException("Failed"))
 
     stubResponses(
-      StringStreamResponse(
+      StringResponse(
         """{"error": "invalid_token","error_description": "The access token expired"}""",
         status = StatusUnauthorized
       )

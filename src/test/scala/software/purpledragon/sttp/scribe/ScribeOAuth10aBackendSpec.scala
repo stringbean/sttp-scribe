@@ -1,3 +1,19 @@
+/*
+ * Copyright 2018 Michael Stringer
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package software.purpledragon.sttp.scribe
 
 import com.github.scribejava.core.builder.api.DefaultApi10a
@@ -16,7 +32,7 @@ class ScribeOAuth10aBackendSpec extends AnyFlatSpec with Matchers with MockFacto
   "ScribeOAuth10aBackend" should "send get request" in new ScribeOAuth10aFixture {
     // given
     stubResponses(
-      StringStreamResponse("OK")
+      StringResponse("OK")
     )
 
     // when
@@ -36,7 +52,7 @@ class ScribeOAuth10aBackendSpec extends AnyFlatSpec with Matchers with MockFacto
   it should "send get request with query params" in new ScribeOAuth10aFixture {
     // given
     stubResponses(
-      StringStreamResponse("OK")
+      StringResponse("OK")
     )
 
     val qString = "query"
@@ -58,7 +74,7 @@ class ScribeOAuth10aBackendSpec extends AnyFlatSpec with Matchers with MockFacto
   it should "send post request" in new ScribeOAuth10aFixture {
     // given
     stubResponses(
-      StringStreamResponse("""{ "user": { "id": 1, "name": "John" }}""")
+      StringResponse("""{ "user": { "id": 1, "name": "John" }}""")
     )
 
     val requestBody = """{ "user": { "name": "John" }}"""
@@ -91,7 +107,7 @@ class ScribeOAuth10aBackendSpec extends AnyFlatSpec with Matchers with MockFacto
   it should "pass through 404 response" in new ScribeOAuth10aFixture {
     // given
     stubResponses(
-      StringStreamResponse("Test not found", status = StatusNotFound)
+      StringResponse("Test not found", status = StatusNotFound)
     )
 
     // when
@@ -108,7 +124,7 @@ class ScribeOAuth10aBackendSpec extends AnyFlatSpec with Matchers with MockFacto
     )
   }
 
-  it should "refresh token on 401" in new ScribeOAuth10aFixture {
+  it should "refresh token on 401 token expired" in new ScribeOAuth10aFixture {
     // given
     (tokenProvider.tokenRenewed _).expects(*)
     (tokenProvider.prepareTokenRenewalRequest _).expects(*)
@@ -119,12 +135,12 @@ class ScribeOAuth10aBackendSpec extends AnyFlatSpec with Matchers with MockFacto
     (oauthService.signRequest _).expects(updatedToken, capture(requestCaptor))
 
     stubResponses(
-      StringStreamResponse(
-        """{"error": "invalid_token","error_description": "The access token expired"}""",
+      StringResponse(
+        "oauth_problem=token_expired&oauth_problem_advice=The access token has expired.",
         status = StatusUnauthorized
       ),
-      StringBodyResponse("oauth_token=updated-token&oauth_token_secret=updated-secret"),
-      StringStreamResponse("OK")
+      StringResponse("oauth_token=updated-token&oauth_token_secret=updated-secret"),
+      StringResponse("OK")
     )
 
     // when
@@ -143,20 +159,14 @@ class ScribeOAuth10aBackendSpec extends AnyFlatSpec with Matchers with MockFacto
     )
   }
 
-  it should "return 401 on token refresh failure" in new ScribeOAuth10aFixture {
+  it should "return 401 if not token expired error" in new ScribeOAuth10aFixture {
     // given
-    (tokenProvider.prepareTokenRenewalRequest _).expects(*)
-
-    (oauthService.signRequest _).expects(accessToken, capture(requestCaptor))
-      .throws(new OAuthException("Failed"))
-
     stubResponses(
-      StringStreamResponse(
-        """{"error": "invalid_token","error_description": "The access token expired"}""",
+      StringResponse(
+        "access denied",
         status = StatusUnauthorized
       )
     )
-
 
     // when
     val result: Identity[Response[Either[String, String]]] = basicRequest
@@ -165,7 +175,36 @@ class ScribeOAuth10aBackendSpec extends AnyFlatSpec with Matchers with MockFacto
 
     // then
     result.code shouldBe StatusCode.Unauthorized
-    result.body shouldBe Left("""{"error": "invalid_token","error_description": "The access token expired"}""")
+    result.body shouldBe Left("access denied")
+
+    verifyRequests(
+      RequestExpectation("https://example.com/api/test")
+    )
+  }
+
+  it should "return 401 on token refresh failure" in new ScribeOAuth10aFixture {
+    // given
+    (tokenProvider.prepareTokenRenewalRequest _).expects(*)
+
+    (oauthService.signRequest _)
+      .expects(accessToken, capture(requestCaptor))
+      .throws(new OAuthException("Failed"))
+
+    stubResponses(
+      StringResponse(
+        "oauth_problem=token_expired&oauth_problem_advice=The access token has expired.",
+        status = StatusUnauthorized
+      )
+    )
+
+    // when
+    val result: Identity[Response[Either[String, String]]] = basicRequest
+      .get(uri"https://example.com/api/test")
+      .send()
+
+    // then
+    result.code shouldBe StatusCode.Unauthorized
+    result.body shouldBe Left("oauth_problem=token_expired&oauth_problem_advice=The access token has expired.")
 
     verifyRequests(
       RequestExpectation("https://example.com/api/test"),
@@ -180,7 +219,7 @@ class ScribeOAuth10aBackendSpec extends AnyFlatSpec with Matchers with MockFacto
         new ScribeOAuth10aBackend(oauthService, tokenProvider, encodingStyle = QueryParamEncodingStyle.Scribe)
 
       stubResponses(
-        StringStreamResponse("OK")
+        StringResponse("OK")
       )
 
       val qString = "query"
