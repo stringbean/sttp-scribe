@@ -154,6 +154,40 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
     )
   }
 
+  it should "only refresh token once" in new ScribeOAuth20Fixture {
+    // given
+    (tokenProvider.tokenRenewed _).expects(*)
+    (oauthService.refreshAccessToken(_: String)).expects("refresh-token").returning(updatedToken)
+    (oauthService.signRequest(_: OAuth2AccessToken, _: OAuthRequest)).expects(updatedToken, capture(requestCaptor))
+
+    stubResponses(
+      StringResponse(
+        "Token expired",
+        status = StatusUnauthorized,
+        headers = Map("WWW-Authenticate" -> "Bearer realm=\"Example\", error=\"invalid_token\"")
+      ),
+      StringResponse(
+        "Token expired",
+        status = StatusUnauthorized,
+        headers = Map("WWW-Authenticate" -> "Bearer realm=\"Example\", error=\"invalid_token\"")
+      )
+    )
+
+    // when
+    val result: Identity[Response[Either[String, String]]] = basicRequest
+      .get(uri"https://example.com/api/test")
+      .send()
+
+    // then
+    result.code shouldBe StatusCode.Unauthorized
+    result.body shouldBe Left("Token expired")
+
+    verifyRequests(
+      RequestExpectation("https://example.com/api/test"),
+      RequestExpectation("https://example.com/api/test")
+    )
+  }
+
   it should "return 401 if not token expired error" in new ScribeOAuth20Fixture {
     // given
     stubResponses(
