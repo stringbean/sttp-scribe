@@ -16,24 +16,21 @@
 
 package software.purpledragon.sttp.scribe
 
-import com.fasterxml.jackson.core.JsonProcessingException
-import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.github.scribejava.core.exceptions.OAuthException
 import com.github.scribejava.core.model.{OAuth2AccessToken, OAuthRequest, Response}
 import com.github.scribejava.core.oauth.OAuth20Service
 import software.purpledragon.sttp.scribe.QueryParamEncodingStyle.Sttp
 
-object ScribeOAuth20Backend {
-  private val objectMapper = new ObjectMapper()
+object ScribeOAuth20Backend extends Logging {
+  private val TokenExpiredHeaderName = "WWW-Authenticate"
+  private val TokenExpiredHeaderPattern = "Bearer.*error=\"invalid_token\".*".r
 
   val DefaultTokenExpiredCheck: TokenExpiredResponseCheck = { response =>
-    try {
-      val body: JsonNode = objectMapper.readTree(response.getBody)
-      val error = body.at("/error").asText()
-      error == "invalid_token"
-    } catch {
-      case _: JsonProcessingException =>
-        // not JSON or invalid - assume not an OAuth error
+    response.getHeader(TokenExpiredHeaderName) match {
+      case TokenExpiredHeaderPattern() =>
+        true
+
+      case _ =>
         false
     }
   }

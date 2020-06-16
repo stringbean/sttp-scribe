@@ -132,8 +132,9 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
 
     stubResponses(
       StringResponse(
-        """{"error": "invalid_token","error_description": "The access token expired"}""",
-        status = StatusUnauthorized
+        "Token expired",
+        status = StatusUnauthorized,
+        headers = Map("WWW-Authenticate" -> "Bearer realm=\"Example\", error=\"invalid_token\"")
       ),
       StringResponse("OK")
     )
@@ -182,8 +183,9 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
 
     stubResponses(
       StringResponse(
-        """{"error": "invalid_token","error_description": "The access token expired"}""",
-        status = StatusUnauthorized
+        "Token expired",
+        status = StatusUnauthorized,
+        headers = Map("WWW-Authenticate" -> "Bearer realm=\"Example\", error=\"invalid_token\"")
       )
     )
 
@@ -194,7 +196,7 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
 
     // then
     result.code shouldBe StatusCode.Unauthorized
-    result.body shouldBe Left("""{"error": "invalid_token","error_description": "The access token expired"}""")
+    result.body shouldBe Left("Token expired")
 
     verifyRequests(
       RequestExpectation("https://example.com/api/test")
@@ -238,8 +240,9 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
 
     stubResponses(
       StringResponse(
-        """{"error": "invalid_token","error_description": "The access token expired"}""",
-        status = StatusUnauthorized
+        "Token expired",
+        status = StatusUnauthorized,
+        headers = Map("WWW-Authenticate" -> "Bearer realm=\"Example\", error=\"invalid_token\"")
       ),
       StringResponse("OK")
     )
@@ -270,8 +273,9 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
 
     stubResponses(
       StringResponse(
-        """{"error": "invalid_token","error_description": "The access token expired"}""",
-        status = StatusUnauthorized
+        "Token expired",
+        status = StatusUnauthorized,
+        headers = Map("WWW-Authenticate" -> "Bearer realm=\"Example\", error=\"invalid_token\"")
       )
     )
 
@@ -282,7 +286,7 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
 
     // then
     result.code shouldBe StatusCode.Unauthorized
-    result.body shouldBe Left("""{"error": "invalid_token","error_description": "The access token expired"}""")
+    result.body shouldBe Left("Token expired")
 
     verifyRequests(
       RequestExpectation("https://example.com/api/test")

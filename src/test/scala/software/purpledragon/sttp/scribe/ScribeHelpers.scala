@@ -36,7 +36,6 @@ trait ScribeHelpers extends MockFactory with Matchers {
   val StatusNotFound: ResponseStatus = (404, "Not Found")
   val StatusUnauthorized: ResponseStatus = (401, "Unauthorized")
 
-
   case class RequestExpectation(
       url: String,
       verb: Verb = Verb.GET,
