@@ -1,5 +1,5 @@
 language: scala
-sudo: false
+dist: bionic
 
 jdk:
   - openjdk8
@@ -16,5 +16,9 @@ before_cache:
 
 jobs:
   include:
-    - stage: Test
-      script: sbt +test
+    # coverage only runs on 2.12 openjdk11
+    - jdk: openjdk11
+      stage: Coverage
+      script: sbt ++2.12.10 coverage test coverageReport coverageAggregate && bash <(curl -s https://codecov.io/bash)
+
+script: sbt +test

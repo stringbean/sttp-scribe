@@ -21,17 +21,29 @@ import com.github.scribejava.core.model.{OAuth1AccessToken, OAuthRequest, Respon
 import com.github.scribejava.core.oauth.OAuth10aService
 import software.purpledragon.sttp.scribe.QueryParamEncodingStyle.Sttp
 
+object ScribeOAuth10aBackend {
+  private val TokenExpiredPattern = ".*oauth_problem=token_expired.*".r
+
+  val DefaultTokenExpiredCheck: TokenExpiredResponseCheck = { response =>
+    response.getBody match {
+      case TokenExpiredPattern() => true
+      case _ => false
+    }
+  }
+}
+
 class ScribeOAuth10aBackend(
     service: OAuth10aService,
     tokenProvider: OAuth1TokenProvider,
+    isTokenExpiredResponse: TokenExpiredResponseCheck = ScribeOAuth10aBackend.DefaultTokenExpiredCheck,
     encodingStyle: QueryParamEncodingStyle = Sttp
-) extends ScribeBackend(service)
+) extends ScribeBackend(service, isTokenExpiredResponse, encodingStyle)
     with Logging {
 
   private var oauthToken: Option[OAuth1AccessToken] = None
 
   override final def withEncodingStyle(style: QueryParamEncodingStyle): ScribeOAuth10aBackend = {
-    new ScribeOAuth10aBackend(service, tokenProvider, style)
+    new ScribeOAuth10aBackend(service, tokenProvider, isTokenExpiredResponse, style)
   }
 
   override protected def signRequest(request: OAuthRequest): Unit = {
@@ -55,7 +67,8 @@ class ScribeOAuth10aBackend(
       true
     } catch {
       case oae: OAuthException =>
-        logger.warn("Error while renewing OAuth token")
+        logger.warn("Error while renewing OAuth token: {}", oae.getMessage)
+        logger.trace("Error while renewing OAuth token", oae)
         false
     }
   }

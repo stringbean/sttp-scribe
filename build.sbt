@@ -6,13 +6,26 @@ crossScalaVersions := Seq(scalaVersion.value, "2.11.12", "2.13.2")
 
 // format: off
 libraryDependencies ++= Seq(
-  "org.slf4j"                     %  "slf4j-api"        % "1.7.26",
-  "com.softwaremill.sttp.client"  %% "core"             % "2.1.2",
-  "com.github.scribejava"         %  "scribejava-apis"  % "6.9.0",
-  "com.github.bigwheel"           %% "util-backports"   % "2.1",
-  "org.scalatest"                 %% "scalatest"        % "3.0.8"   % Test
+  "org.slf4j"                     %  "slf4j-api"                % "1.7.26",
+  "com.softwaremill.sttp.client"  %% "core"                     % "2.1.2",
+  "com.github.scribejava"         %  "scribejava-apis"          % "6.9.0",
+  "com.github.bigwheel"           %% "util-backports"           % "2.1",
+  "org.scalatest"                 %% "scalatest"                % "3.1.2"   % Test,
+  "org.scalamock"                 %% "scalamock"                % "4.4.0"   % Test,
+  "org.scala-lang.modules"        %% "scala-collection-compat"  % "2.1.6"   % Test,
+  "commons-io"                    %  "commons-io"               % "2.7"     % Test,
+  "org.apache.commons"            %  "commons-lang3"            % "3.10"    % Test,
+  "ch.qos.logback"                %  "logback-classic"          % "1.2.3"   % Test,
 )
 // format: on
+
+scalacOptions ++= {
+  if (scalaVersion.value.startsWith("2.13")) {
+    Nil
+  } else {
+    Seq("-Ypartial-unification")
+  }
+}
 
 headerLicense := Some(HeaderLicense.ALv2("2018", "Michael Stringer"))
 licenses += ("Apache-2.0", url("https://opensource.org/licenses/Apache-2.0"))

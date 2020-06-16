@@ -17,11 +17,18 @@
 package software.purpledragon.sttp
 
 import java.io.{ByteArrayOutputStream, InputStream, OutputStream}
+
+import com.github.scribejava.core.model.Response
+
 import scala.util.Try
 
 package object scribe {
+  type TokenExpiredResponseCheck = Response => Boolean
+
+  private val BufferSize = 1024
+
   private[sttp] def transfer(is: InputStream, os: OutputStream): Unit = {
-    val buffer = new Array[Byte](1024)
+    val buffer = new Array[Byte](BufferSize)
 
     Iterator
       .continually(Try(is.read(buffer)).getOrElse(-1))
