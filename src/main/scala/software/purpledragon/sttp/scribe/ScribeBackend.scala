@@ -46,6 +46,11 @@ abstract class ScribeBackend(
   def withEncodingStyle(encodingStyle: QueryParamEncodingStyle): ScribeBackend
 
   override def send[T](request: Request[T, Nothing]): Response[T] = {
+    send(request, retrying = false)
+  }
+
+  @tailrec
+  private def send[T](request: Request[T, Nothing], retrying: Boolean): Response[T] = {
     val (url, params) = encodingStyle match {
       case Sttp =>
         (request.uri.toString, Nil)
@@ -70,11 +75,10 @@ abstract class ScribeBackend(
 
     val response = service.execute(oAuthRequest)
 
-    if (response.getCode == StatusCode.Unauthorized.code && isTokenExpiredResponse(response) && renewAccessToken(
-          response
-        )) {
+    if (!retrying && response.getCode == StatusCode.Unauthorized.code && isTokenExpiredResponse(response) &&
+        renewAccessToken(response)) {
       // renewed access token - retry the request
-      send(request)
+      send(request, retrying = true)
     } else {
       handleResponse(response, request.response)
     }
@@ -89,9 +93,11 @@ abstract class ScribeBackend(
   }
 
   override def close(): Identity[Unit] = ()
+
   override val responseMonad: MonadError[Identity] = IdMonad
 
   protected def signRequest(request: OAuthRequest): Unit
+
   protected def renewAccessToken(response: ScribeResponse): Boolean
 
   private def handleResponse[T](r: ScribeResponse, responseAs: ResponseAs[T, Nothing]): Response[T] = {
@@ -118,6 +124,7 @@ abstract class ScribeBackend(
 
       case IgnoreResponse =>
         @tailrec def consume(): Unit = if (is.read() != -1) consume()
+
         consume()
 
       case ResponseAsByteArray =>
@@ -192,6 +199,7 @@ abstract class ScribeBackend(
       // nothing to set
     }
   }
+
   // scalastyle:on
 
   private def method2Verb(method: Method): Verb = {
@@ -220,12 +228,16 @@ abstract class ScribeBackend(
 
 trait OAuthTokenProvider[T <: Token] {
   def accessTokenForRequest: T
+
   def tokenRenewed(token: T): Unit
 }
 
 sealed trait QueryParamEncodingStyle
 
 object QueryParamEncodingStyle {
+
   case object Sttp extends QueryParamEncodingStyle
+
   case object Scribe extends QueryParamEncodingStyle
+
 }

@@ -159,6 +159,44 @@ class ScribeOAuth10aBackendSpec extends AnyFlatSpec with Matchers with MockFacto
     )
   }
 
+  it should "only refresh token once" in new ScribeOAuth10aFixture {
+    // given
+    (tokenProvider.tokenRenewed _).expects(*)
+    (tokenProvider.prepareTokenRenewalRequest _).expects(*)
+
+    // renewal request
+    (oauthService.signRequest _).expects(accessToken, capture(requestCaptor))
+    // retried request
+    (oauthService.signRequest _).expects(updatedToken, capture(requestCaptor))
+
+    stubResponses(
+      StringResponse(
+        "oauth_problem=token_expired&oauth_problem_advice=The access token has expired.",
+        status = StatusUnauthorized
+      ),
+      StringResponse("oauth_token=updated-token&oauth_token_secret=updated-secret"),
+      StringResponse(
+        "oauth_problem=token_expired&oauth_problem_advice=The access token has expired.",
+        status = StatusUnauthorized
+      )
+    )
+
+    // when
+    val result: Identity[Response[Either[String, String]]] = basicRequest
+      .get(uri"https://example.com/api/test")
+      .send()
+
+    // then
+    result.code shouldBe StatusCode.Unauthorized
+    result.body shouldBe Left("oauth_problem=token_expired&oauth_problem_advice=The access token has expired.")
+
+    verifyRequests(
+      RequestExpectation("https://example.com/api/test"),
+      RequestExpectation("https://example.com/oauth/access-token", headers = Map.empty),
+      RequestExpectation("https://example.com/api/test")
+    )
+  }
+
   it should "return 401 if not token expired error" in new ScribeOAuth10aFixture {
     // given
     stubResponses(
