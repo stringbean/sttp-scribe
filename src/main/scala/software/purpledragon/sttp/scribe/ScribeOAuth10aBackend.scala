@@ -66,8 +66,9 @@ class ScribeOAuth10aBackend(
       oauthToken = Some(newToken)
       true
     } catch {
-      case _: OAuthException =>
-        logger.warn("Error while renewing OAuth token")
+      case oae: OAuthException =>
+        logger.warn("Error while renewing OAuth token: {}", oae.getMessage)
+        logger.trace("Error while renewing OAuth token", oae)
         false
     }
   }
