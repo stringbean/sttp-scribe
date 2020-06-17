@@ -58,3 +58,5 @@ releaseProcess := Seq[ReleaseStep](
   commitNextVersion,
   pushChanges
 )
+
+mimaPreviousArtifacts := Set("software.purpledragon" %% "sttp-scribe" % "2.0.1")

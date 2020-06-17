@@ -4,6 +4,7 @@ addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "1.0.0")
 
 // testing
 addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.6.1")
+addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.7.0")
 
 // artifact publishing
 addSbtPlugin("org.foundweekends" % "sbt-bintray" % "0.5.4")

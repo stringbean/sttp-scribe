@@ -21,4 +21,4 @@ jobs:
       stage: Coverage
       script: sbt ++2.12.10 coverage test coverageReport coverageAggregate && bash <(curl -s https://codecov.io/bash)
 
-script: sbt +test
+script: sbt +test +mimaReportBinaryIssues
