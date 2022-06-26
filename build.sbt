@@ -1,8 +1,8 @@
 name := "sttp-scribe"
 organization := "software.purpledragon"
 
-scalaVersion := "2.12.11"
-crossScalaVersions := Seq(scalaVersion.value, "2.11.12", "2.13.2")
+scalaVersion := "2.12.16"
+crossScalaVersions := Seq(scalaVersion.value, "2.11.12", "2.13.8")
 
 // format: off
 libraryDependencies ++= Seq(
