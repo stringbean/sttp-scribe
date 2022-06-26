@@ -38,8 +38,6 @@ homepage := Some(url("https://github.com/stringbean/sttp-scribe"))
 scmInfo := Some(
   ScmInfo(url("https://github.com/stringbean/sttp-scribe"), "https://github.com/stringbean/sttp-scribe.git"))
 
-bintrayPackageLabels := Seq("sttp", "scribe", "oauth")
-
 import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 
 releaseCrossBuild := true
