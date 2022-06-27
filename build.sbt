@@ -10,12 +10,12 @@ libraryDependencies ++= Seq(
   "com.softwaremill.sttp.client"  %% "core"                     % "2.1.2",
   "com.github.scribejava"         %  "scribejava-apis"          % "6.9.0",
   "com.github.bigwheel"           %% "util-backports"           % "2.1",
-  "org.scalatest"                 %% "scalatest"                % "3.1.2"   % Test,
+  "org.scalatest"                 %% "scalatest"                % "3.2.12"  % Test,
   "org.mockito"                   %% "mockito-scala-scalatest"  % "1.17.7"  % Test,
-  "org.scala-lang.modules"        %% "scala-collection-compat"  % "2.1.6"   % Test,
-  "commons-io"                    %  "commons-io"               % "2.7"     % Test,
-  "org.apache.commons"            %  "commons-lang3"            % "3.10"    % Test,
-  "ch.qos.logback"                %  "logback-classic"          % "1.2.3"   % Test
+  "org.scala-lang.modules"        %% "scala-collection-compat"  % "2.7.0"   % Test,
+  "commons-io"                    %  "commons-io"               % "2.11.0"  % Test,
+  "org.apache.commons"            %  "commons-lang3"            % "3.12.0"  % Test,
+  "ch.qos.logback"                %  "logback-classic"          % "1.2.11"  % Test
 )
 // format: on
 
