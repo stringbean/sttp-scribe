@@ -11,11 +11,11 @@ libraryDependencies ++= Seq(
   "com.github.scribejava"         %  "scribejava-apis"          % "6.9.0",
   "com.github.bigwheel"           %% "util-backports"           % "2.1",
   "org.scalatest"                 %% "scalatest"                % "3.1.2"   % Test,
-  "org.scalamock"                 %% "scalamock"                % "4.4.0"   % Test,
+  "org.mockito"                   %% "mockito-scala-scalatest"  % "1.17.7"  % Test,
   "org.scala-lang.modules"        %% "scala-collection-compat"  % "2.1.6"   % Test,
   "commons-io"                    %  "commons-io"               % "2.7"     % Test,
   "org.apache.commons"            %  "commons-lang3"            % "3.10"    % Test,
-  "ch.qos.logback"                %  "logback-classic"          % "1.2.3"   % Test,
+  "ch.qos.logback"                %  "logback-classic"          % "1.2.3"   % Test
 )
 // format: on
 
@@ -36,7 +36,8 @@ organizationName := "Purple Dragon Software"
 organizationHomepage := Some(url("https://purpledragon.software"))
 homepage := Some(url("https://github.com/stringbean/sttp-scribe"))
 scmInfo := Some(
-  ScmInfo(url("https://github.com/stringbean/sttp-scribe"), "https://github.com/stringbean/sttp-scribe.git"))
+  ScmInfo(url("https://github.com/stringbean/sttp-scribe"), "https://github.com/stringbean/sttp-scribe.git")
+)
 
 import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 

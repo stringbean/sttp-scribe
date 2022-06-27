@@ -19,15 +19,16 @@ package software.purpledragon.sttp.scribe
 import com.github.scribejava.core.exceptions.OAuthException
 import com.github.scribejava.core.model.{OAuth2AccessToken, OAuthRequest, Verb}
 import com.github.scribejava.core.oauth.OAuth20Service
-import org.scalamock.matchers.ArgCapture.CaptureAll
-import org.scalamock.scalatest.MockFactory
+import org.mockito.ArgumentMatchersSugar._
+import org.mockito.MockitoSugar._
+import org.mockito.captor.{ArgCaptor, Captor}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import sttp.client._
 import sttp.model.{MediaType, StatusCode}
 
 // scalastyle:off null
-class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactory with ScribeHelpers {
+class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with ScribeHelpers {
 
   "ScribeOAuth20Backend" should "send get request" in new ScribeOAuth20Fixture {
     // given
@@ -126,9 +127,7 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
 
   it should "refresh token on 401" in new ScribeOAuth20Fixture {
     // given
-    (tokenProvider.tokenRenewed _).expects(*)
-    (oauthService.refreshAccessToken(_: String)).expects("refresh-token").returning(updatedToken)
-    (oauthService.signRequest(_: OAuth2AccessToken, _: OAuthRequest)).expects(updatedToken, capture(requestCaptor))
+    doReturn(updatedToken).when(oauthService).refreshAccessToken(any[String])
 
     stubResponses(
       StringResponse(
@@ -148,17 +147,20 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
     result.code shouldBe StatusCode.Ok
     result.body shouldBe Right("OK")
 
+    verify(tokenProvider).tokenRenewed(updatedToken)
+
     verifyRequests(
       RequestExpectation("https://example.com/api/test"),
       RequestExpectation("https://example.com/api/test")
     )
+
+    // first attempt with original token then second attempt with updated token
+    tokenCaptor.values shouldBe Seq(accessToken, updatedToken)
   }
 
   it should "only refresh token once" in new ScribeOAuth20Fixture {
     // given
-    (tokenProvider.tokenRenewed _).expects(*)
-    (oauthService.refreshAccessToken(_: String)).expects("refresh-token").returning(updatedToken)
-    (oauthService.signRequest(_: OAuth2AccessToken, _: OAuthRequest)).expects(updatedToken, capture(requestCaptor))
+    doReturn(updatedToken).when(oauthService).refreshAccessToken(any[String])
 
     stubResponses(
       StringResponse(
@@ -182,10 +184,15 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
     result.code shouldBe StatusCode.Unauthorized
     result.body shouldBe Left("Token expired")
 
+    verify(tokenProvider).tokenRenewed(updatedToken)
+
     verifyRequests(
       RequestExpectation("https://example.com/api/test"),
       RequestExpectation("https://example.com/api/test")
     )
+
+    // first attempt with original token then second attempt with updated token
+    tokenCaptor.values shouldBe Seq(accessToken, updatedToken)
   }
 
   it should "return 401 if not token expired error" in new ScribeOAuth20Fixture {
@@ -213,7 +220,7 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
 
   it should "return 401 on token refresh failure" in new ScribeOAuth20Fixture {
     // given
-    (oauthService.refreshAccessToken(_: String)).expects("refresh-token").throws(new OAuthException("Failed"))
+    doThrow(new OAuthException("Failed")).when(oauthService).refreshAccessToken(any[String])
 
     stubResponses(
       StringResponse(
@@ -268,9 +275,7 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
     override protected implicit val backend: SttpBackend[Identity, Nothing, NothingT] =
       new ScribeOAuth20Backend(oauthService, tokenProvider, grantType = OAuth2GrantType.ClientCredentials)
 
-    (tokenProvider.tokenRenewed _).expects(*)
-    (oauthService.getAccessTokenClientCredentialsGrant: () => OAuth2AccessToken).expects().returning(updatedToken)
-    (oauthService.signRequest(_: OAuth2AccessToken, _: OAuthRequest)).expects(updatedToken, capture(requestCaptor))
+    doReturn(updatedToken).when(oauthService).getAccessTokenClientCredentialsGrant()
 
     stubResponses(
       StringResponse(
@@ -294,6 +299,9 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
       RequestExpectation("https://example.com/api/test"),
       RequestExpectation("https://example.com/api/test")
     )
+
+    // first attempt with original token then second attempt with updated token
+    tokenCaptor.values shouldBe Seq(accessToken, updatedToken)
   }
 
   it should "return 401 on token refresh failure" in new ScribeOAuth20Fixture {
@@ -301,9 +309,7 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
     override protected implicit val backend: SttpBackend[Identity, Nothing, NothingT] =
       new ScribeOAuth20Backend(oauthService, tokenProvider, grantType = OAuth2GrantType.ClientCredentials)
 
-    (oauthService.getAccessTokenClientCredentialsGrant: () => OAuth2AccessToken)
-      .expects()
-      .throws(new OAuthException("Failed"))
+    doThrow(new OAuthException("Failed")).when(oauthService).getAccessTokenClientCredentialsGrant
 
     stubResponses(
       StringResponse(
@@ -334,19 +340,19 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with MockFactor
     val accessToken: OAuth2AccessToken = new OAuth2AccessToken("access-token", null, null, "refresh-token", null, null)
     val updatedToken: OAuth2AccessToken = new OAuth2AccessToken("updated-token")
 
-    val requestCaptor: CaptureAll[OAuthRequest] = CaptureAll[OAuthRequest]()
+    val tokenCaptor: Captor[OAuth2AccessToken] = ArgCaptor[OAuth2AccessToken]
+    val requestCaptor: Captor[OAuthRequest] = ArgCaptor[OAuthRequest]
 
     // common request parts
-    (tokenProvider.accessTokenForRequest _).expects().returning(accessToken).once()
-    (oauthService.signRequest(_: OAuth2AccessToken, _: OAuthRequest)).expects(accessToken, capture(requestCaptor))
+    doReturn(accessToken).when(tokenProvider).accessTokenForRequest
+    doNothing.when(oauthService).signRequest(tokenCaptor.capture, requestCaptor.capture)
 
     protected implicit val backend: SttpBackend[Identity, Nothing, NothingT] =
       new ScribeOAuth20Backend(oauthService, tokenProvider)
 
     protected def stubResponses(responses: TestResponse*): Unit = {
-      responses foreach { response =>
-        (oauthService.execute(_: OAuthRequest)).expects(*).returning(response.toResponse)
-      }
+      val scribeResponses = responses.map(_.toResponse)
+      doReturn(scribeResponses.head, scribeResponses.tail: _*).when(oauthService).execute(any[OAuthRequest])
     }
 
     protected def verifyRequests(requests: RequestExpectation*): Unit = {
