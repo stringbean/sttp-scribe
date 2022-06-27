@@ -4,7 +4,6 @@ organization := "software.purpledragon"
 scalaVersion := "2.12.16"
 crossScalaVersions := Seq(scalaVersion.value, "2.11.12", "2.13.8")
 
-// format: off
 libraryDependencies ++= Seq(
   "org.slf4j"                     %  "slf4j-api"                % "1.7.36",
   "com.softwaremill.sttp.client"  %% "core"                     % "2.3.0",
@@ -17,7 +16,6 @@ libraryDependencies ++= Seq(
   "org.apache.commons"            %  "commons-lang3"            % "3.12.0"  % Test,
   "ch.qos.logback"                %  "logback-classic"          % "1.2.11"  % Test
 )
-// format: on
 
 scalacOptions ++= {
   if (scalaVersion.value.startsWith("2.13")) {

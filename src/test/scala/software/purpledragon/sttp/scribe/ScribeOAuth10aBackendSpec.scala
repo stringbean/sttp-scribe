@@ -300,9 +300,8 @@ class ScribeOAuth10aBackendSpec extends AnyFlatSpec with Matchers with ScribeHel
     protected def verifyRequests(requests: RequestExpectation*): Unit = {
       requestCaptor.values should have size requests.size
 
-      requestCaptor.values.zip(requests) foreach {
-        case (request, expected) =>
-          expected.verify(request)
+      requestCaptor.values.zip(requests) foreach { case (request, expected) =>
+        expected.verify(request)
       }
     }
   }
