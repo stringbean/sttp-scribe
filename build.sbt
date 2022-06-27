@@ -8,7 +8,7 @@ crossScalaVersions := Seq(scalaVersion.value, "2.11.12", "2.13.8")
 libraryDependencies ++= Seq(
   "org.slf4j"                     %  "slf4j-api"                % "1.7.36",
   "com.softwaremill.sttp.client"  %% "core"                     % "2.3.0",
-  "com.github.scribejava"         %  "scribejava-apis"          % "8.3.1",
+  "com.github.scribejava"         %  "scribejava-core"          % "8.3.1",
   "com.github.bigwheel"           %% "util-backports"           % "2.1",
   "org.scalatest"                 %% "scalatest"                % "3.2.12"  % Test,
   "org.mockito"                   %% "mockito-scala-scalatest"  % "1.17.7"  % Test,
