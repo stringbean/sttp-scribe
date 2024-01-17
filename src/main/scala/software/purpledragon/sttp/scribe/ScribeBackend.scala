@@ -19,8 +19,7 @@ package software.purpledragon.sttp.scribe
 import java.io.{FileOutputStream, InputStream, UnsupportedEncodingException}
 import java.net.URLDecoder
 import java.util.zip.{GZIPInputStream, InflaterInputStream}
-
-import com.github.scribejava.core.model.{OAuthRequest, Token, Verb, Response => ScribeResponse}
+import com.github.scribejava.core.model.{OAuthRequest, Response => ScribeResponse, Token, Verb}
 import com.github.scribejava.core.oauth.OAuthService
 import software.purpledragon.sttp.scribe.QueryParamEncodingStyle._
 import sttp.client._
@@ -29,8 +28,8 @@ import sttp.client.ws.WebSocketResponse
 import sttp.model._
 
 import scala.annotation.tailrec
-import scala.collection.JavaConverters._
-import scala.language.higherKinds
+import scala.collection.compat.immutable.ArraySeq
+import scala.jdk.CollectionConverters._
 import scala.util.Using
 
 abstract class ScribeBackend(
@@ -40,9 +39,9 @@ abstract class ScribeBackend(
 ) extends SttpBackend[Identity, Nothing, NothingT] {
 
   /**
-    * Url query parameter encoding is handled slightly differently by sttp and scribe. This allows
-    * you to configure which implementation the backend should use.
-    */
+   * Url query parameter encoding is handled slightly differently by sttp and scribe. This allows
+   * you to configure which implementation the backend should use.
+   */
   def withEncodingStyle(encodingStyle: QueryParamEncodingStyle): ScribeBackend
 
   override def send[T](request: Request[T, Nothing]): Response[T] = {
@@ -59,8 +58,8 @@ abstract class ScribeBackend(
     }
     val oAuthRequest = new OAuthRequest(method2Verb(request.method), url)
 
-    params foreach {
-      case (name, value) => oAuthRequest.addQuerystringParameter(name, value)
+    params foreach { case (name, value) =>
+      oAuthRequest.addQuerystringParameter(name, value)
     }
     request.headers foreach { header =>
       oAuthRequest.addHeader(header.name, header.value)
@@ -75,8 +74,10 @@ abstract class ScribeBackend(
 
     val response = service.execute(oAuthRequest)
 
-    if (!retrying && response.getCode == StatusCode.Unauthorized.code && isTokenExpiredResponse(response) &&
-        renewAccessToken(response)) {
+    if (
+      !retrying && response.getCode == StatusCode.Unauthorized.code && isTokenExpiredResponse(response) &&
+      renewAccessToken(response)
+    ) {
       // renewed access token - retry the request
       send(request, retrying = true)
     } else {
@@ -152,25 +153,16 @@ abstract class ScribeBackend(
     }
   }
 
-  private def encodingFromContentType(contentType: String): Option[String] = {
-    contentType
-      .split(";")
-      .map(_.trim.toLowerCase)
-      .collectFirst {
-        case s if s.startsWith("charset=") => s.substring("charset=".length)
-      }
-  }
-
-  // scalastyle:off cyclomatic.complexity
   private def setRequestPayload(body: RequestBody[_], contentType: Option[String], request: OAuthRequest): Unit = {
     body match {
       case StringBody(content, encoding, _)
           if contentType.contains(MediaType.ApplicationXWwwFormUrlencoded.toString()) =>
         // have to add these as "body parameters" so that they get included in the oauth signature
         val FormParam = "(.*)=(.*)".r
-        val bodyParams: Seq[(String, String)] = content.split("&").collect {
-          case FormParam(key, value) => (URLDecoder.decode(key, encoding), URLDecoder.decode(value, encoding))
-        }
+        val bodyParams: Seq[(String, String)] =
+          ArraySeq.unsafeWrapArray(content.split("&")).collect { case FormParam(key, value) =>
+            (URLDecoder.decode(key, encoding), URLDecoder.decode(value, encoding))
+          }
         bodyParams.foreach(p => request.addBodyParameter(p._1, p._2))
 
       case StringBody(content, encoding, _) =>
@@ -199,8 +191,6 @@ abstract class ScribeBackend(
       // nothing to set
     }
   }
-
-  // scalastyle:on
 
   private def method2Verb(method: Method): Verb = {
     method match {

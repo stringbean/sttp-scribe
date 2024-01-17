@@ -90,11 +90,11 @@ trait OAuth2TokenProvider extends OAuthTokenProvider[OAuth2AccessToken]
 object OAuth2TokenProvider {
 
   /**
-    * Basic [[OAuth2TokenProvider]] for situations where you don't need to store any renewed tokens. Think *very*
-    * carefully before using this token provider!
-    *
-    * @param token initial access token to use.
-    */
+   * Basic [[OAuth2TokenProvider]] for situations where you don't need to store any renewed tokens. Think *very*
+   * carefully before using this token provider!
+   *
+   * @param token initial access token to use.
+   */
   def basicProviderFor(token: OAuth2AccessToken): OAuth2TokenProvider = {
     new OAuth2TokenProvider() {
       private var current: OAuth2AccessToken = token

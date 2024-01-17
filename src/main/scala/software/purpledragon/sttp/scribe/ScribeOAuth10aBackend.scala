@@ -21,6 +21,8 @@ import com.github.scribejava.core.model.{OAuth1AccessToken, OAuthRequest, Respon
 import com.github.scribejava.core.oauth.OAuth10aService
 import software.purpledragon.sttp.scribe.QueryParamEncodingStyle.Sttp
 
+import scala.annotation.unused
+
 object ScribeOAuth10aBackend {
   private val TokenExpiredPattern = ".*oauth_problem=token_expired.*".r
 
@@ -85,19 +87,19 @@ class ScribeOAuth10aBackend(
 trait OAuth1TokenProvider extends OAuthTokenProvider[OAuth1AccessToken] {
 
   /**
-    * Add any additional required parameters to a request to renew an access token.
-    */
-  def prepareTokenRenewalRequest(request: OAuthRequest): Unit = ()
+   * Add any additional required parameters to a request to renew an access token.
+   */
+  def prepareTokenRenewalRequest(@unused request: OAuthRequest): Unit = ()
 }
 
 object OAuth1TokenProvider {
 
   /**
-    * Basic [[OAuth1TokenProvider]] for situations where you don't need to store any renewed tokens. Think *very*
-    * carefully before using this token provider!
-    *
-    * @param token initial access token to use.
-    */
+   * Basic [[OAuth1TokenProvider]] for situations where you don't need to store any renewed tokens. Think *very*
+   * carefully before using this token provider!
+   *
+   * @param token initial access token to use.
+   */
   def basicProviderFor(token: OAuth1AccessToken): OAuth1TokenProvider = {
     new OAuth1TokenProvider() {
       private var current: OAuth1AccessToken = token
