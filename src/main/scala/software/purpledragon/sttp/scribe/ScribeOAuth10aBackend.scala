@@ -17,9 +17,11 @@
 package software.purpledragon.sttp.scribe
 
 import com.github.scribejava.core.exceptions.OAuthException
-import com.github.scribejava.core.model.{OAuth1AccessToken, OAuthRequest, Response, Verb}
+import com.github.scribejava.core.model.{OAuthRequest, Response, OAuth1AccessToken, Verb}
 import com.github.scribejava.core.oauth.OAuth10aService
 import software.purpledragon.sttp.scribe.QueryParamEncodingStyle.Sttp
+
+import scala.annotation.unused
 
 object ScribeOAuth10aBackend {
   private val TokenExpiredPattern = ".*oauth_problem=token_expired.*".r
@@ -87,7 +89,7 @@ trait OAuth1TokenProvider extends OAuthTokenProvider[OAuth1AccessToken] {
   /**
    * Add any additional required parameters to a request to renew an access token.
    */
-  def prepareTokenRenewalRequest(request: OAuthRequest): Unit = ()
+  def prepareTokenRenewalRequest(@unused request: OAuthRequest): Unit = ()
 }
 
 object OAuth1TokenProvider {

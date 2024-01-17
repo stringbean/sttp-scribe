@@ -16,11 +16,10 @@
 
 package software.purpledragon.sttp.scribe
 
-import java.io.{FileOutputStream, InputStream, UnsupportedEncodingException}
+import java.io.{InputStream, FileOutputStream, UnsupportedEncodingException}
 import java.net.URLDecoder
 import java.util.zip.{GZIPInputStream, InflaterInputStream}
-
-import com.github.scribejava.core.model.{OAuthRequest, Response => ScribeResponse, Token, Verb}
+import com.github.scribejava.core.model.{OAuthRequest, Verb, Token, Response => ScribeResponse}
 import com.github.scribejava.core.oauth.OAuthService
 import software.purpledragon.sttp.scribe.QueryParamEncodingStyle._
 import sttp.client._
@@ -29,8 +28,8 @@ import sttp.client.ws.WebSocketResponse
 import sttp.model._
 
 import scala.annotation.tailrec
-import scala.collection.JavaConverters._
-import scala.language.higherKinds
+import scala.collection.compat.immutable.ArraySeq
+import scala.jdk.CollectionConverters._
 import scala.util.Using
 
 abstract class ScribeBackend(
@@ -154,15 +153,6 @@ abstract class ScribeBackend(
     }
   }
 
-  private def encodingFromContentType(contentType: String): Option[String] = {
-    contentType
-      .split(";")
-      .map(_.trim.toLowerCase)
-      .collectFirst {
-        case s if s.startsWith("charset=") => s.substring("charset=".length)
-      }
-  }
-
   // scalastyle:off cyclomatic.complexity
   private def setRequestPayload(body: RequestBody[_], contentType: Option[String], request: OAuthRequest): Unit = {
     body match {
@@ -170,9 +160,10 @@ abstract class ScribeBackend(
           if contentType.contains(MediaType.ApplicationXWwwFormUrlencoded.toString()) =>
         // have to add these as "body parameters" so that they get included in the oauth signature
         val FormParam = "(.*)=(.*)".r
-        val bodyParams: Seq[(String, String)] = content.split("&").collect { case FormParam(key, value) =>
-          (URLDecoder.decode(key, encoding), URLDecoder.decode(value, encoding))
-        }
+        val bodyParams: Seq[(String, String)] =
+          ArraySeq.unsafeWrapArray(content.split("&")).collect { case FormParam(key, value) =>
+            (URLDecoder.decode(key, encoding), URLDecoder.decode(value, encoding))
+          }
         bodyParams.foreach(p => request.addBodyParameter(p._1, p._2))
 
       case StringBody(content, encoding, _) =>

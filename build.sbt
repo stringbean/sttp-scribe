@@ -8,22 +8,58 @@ libraryDependencies ++= Seq(
   "org.slf4j"                     % "slf4j-api"               % "1.7.26",
   "com.softwaremill.sttp.client" %% "core"                    % "2.1.2",
   "com.github.scribejava"         % "scribejava-apis"         % "6.9.0",
+  "org.scala-lang.modules"       %% "scala-collection-compat" % "2.11.0",
   "com.github.bigwheel"          %% "util-backports"          % "2.1",
   "org.scalatest"                %% "scalatest"               % "3.2.17"  % Test,
   "org.mockito"                  %% "mockito-scala-scalatest" % "1.17.30" % Test,
-  "org.scala-lang.modules"       %% "scala-collection-compat" % "2.1.6"   % Test,
   "commons-io"                    % "commons-io"              % "2.7"     % Test,
   "org.apache.commons"            % "commons-lang3"           % "3.10"    % Test,
   "ch.qos.logback"                % "logback-classic"         % "1.2.3"   % Test
 )
 
-scalacOptions ++= {
-  if (scalaVersion.value.startsWith("2.13")) {
-    Nil
-  } else {
-    Seq("-Ypartial-unification")
+scalacOptions ++= Seq(
+  // format: off
+  "-encoding", "UTF-8",
+  // format: on
+  "-unchecked",
+  "-deprecation",
+  "-feature",
+  "-Ywarn-unused",
+  "-P:semanticdb:synthetics:on"
+) ++ {
+  CrossVersion.partialVersion(scalaVersion.value) match {
+    case Some((2, 11)) =>
+      Seq(
+        "-target:jvm-1.8",
+        "-Xsource:2.13",
+        "-Ypartial-unification",
+        "-Xlint:unsound-match"
+      )
+
+    case Some((2, 12)) =>
+      Seq(
+        // format: off
+        "-release", "8",
+        // format: on
+        "-Xsource:2.13",
+        "-Ypartial-unification",
+        "-Xlint:unsound-match",
+        "-Wconf:origin=scala.collection.compat.*:s"
+      )
+
+    case _ =>
+      Seq(
+        // format: off
+        "-release", "8",
+        // format: on
+        "-Wconf:origin=scala.collection.compat.*:s"
+      )
   }
 }
+
+ThisBuild / semanticdbEnabled          := true
+ThisBuild / semanticdbVersion          := scalafixSemanticdb.revision
+ThisBuild / scalafixScalaBinaryVersion := CrossVersion.binaryScalaVersion(scalaVersion.value)
 
 headerLicense        := Some(HeaderLicense.ALv2("2018", "Michael Stringer"))
 licenses += ("Apache-2.0", url("https://opensource.org/licenses/Apache-2.0"))
