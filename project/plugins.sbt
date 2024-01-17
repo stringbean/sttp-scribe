@@ -2,8 +2,8 @@
 addSbtPlugin("de.heikoseeberger" % "sbt-header" % "5.10.0")
 
 // testing
-addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.0.9")
-addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "1.1.3")
+addSbtPlugin("org.scoverage" % "sbt-scoverage"   % "2.0.9")
+addSbtPlugin("com.typesafe"  % "sbt-mima-plugin" % "1.1.3")
 
 // artifact publishing
 addSbtPlugin("com.github.sbt" % "sbt-pgp"      % "2.2.1")

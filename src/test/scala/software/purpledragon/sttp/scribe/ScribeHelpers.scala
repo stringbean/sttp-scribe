@@ -16,8 +16,8 @@
 
 package software.purpledragon.sttp.scribe
 
-import java.nio.charset.{StandardCharsets, Charset}
-import com.github.scribejava.core.model.{OAuthRequest, Verb, ParameterList, Response => ScribeResponse}
+import java.nio.charset.{Charset, StandardCharsets}
+import com.github.scribejava.core.model.{OAuthRequest, ParameterList, Response => ScribeResponse, Verb}
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.reflect.FieldUtils
 import org.scalatest.Suite
@@ -77,9 +77,9 @@ trait ScribeHelpers extends Matchers {
       doReturn(status._2).when(response).getMessage
 
       doReturn(headers.asJava).when(response).getHeaders
-      doAnswer({ name: String =>
+      doAnswer { name: String =>
         headers.getOrElse(name, null)
-      }).when(response).getHeader(any[String])
+      }.when(response).getHeader(any[String])
 
       stubBody(response)
 

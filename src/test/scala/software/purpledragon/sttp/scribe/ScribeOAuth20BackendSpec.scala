@@ -17,7 +17,7 @@
 package software.purpledragon.sttp.scribe
 
 import com.github.scribejava.core.exceptions.OAuthException
-import com.github.scribejava.core.model.{OAuthRequest, OAuth2AccessToken, Verb}
+import com.github.scribejava.core.model.{OAuth2AccessToken, OAuthRequest, Verb}
 import com.github.scribejava.core.oauth.OAuth20Service
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -357,9 +357,8 @@ class ScribeOAuth20BackendSpec extends AnyFlatSpec with Matchers with ScribeHelp
     protected def verifyRequests(requests: RequestExpectation*): Unit = {
       requestCaptor.values should have size requests.size
 
-      requestCaptor.values.zip(requests) foreach {
-        case (request, expected) =>
-          expected.verify(request)
+      requestCaptor.values.zip(requests) foreach { case (request, expected) =>
+        expected.verify(request)
       }
     }
   }
