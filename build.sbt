@@ -5,16 +5,16 @@ scalaVersion       := "2.13.12"
 crossScalaVersions := Seq(scalaVersion.value, "2.12.18", "2.11.12")
 
 libraryDependencies ++= Seq(
-  "org.slf4j"                     % "slf4j-api"               % "1.7.26",
-  "com.softwaremill.sttp.client" %% "core"                    % "2.1.2",
-  "com.github.scribejava"         % "scribejava-apis"         % "6.9.0",
+  "com.softwaremill.sttp.client" %% "core"                    % "2.3.0",
+  "com.github.scribejava"         % "scribejava-apis"         % "8.3.3",
+  "org.slf4j"                     % "slf4j-api"               % "1.7.36",
   "org.scala-lang.modules"       %% "scala-collection-compat" % "2.11.0",
   "com.github.bigwheel"          %% "util-backports"          % "2.1",
   "org.scalatest"                %% "scalatest"               % "3.2.17"  % Test,
   "org.mockito"                  %% "mockito-scala-scalatest" % "1.17.30" % Test,
-  "commons-io"                    % "commons-io"              % "2.7"     % Test,
-  "org.apache.commons"            % "commons-lang3"           % "3.10"    % Test,
-  "ch.qos.logback"                % "logback-classic"         % "1.2.3"   % Test
+  "commons-io"                    % "commons-io"              % "2.15.1"  % Test,
+  "org.apache.commons"            % "commons-lang3"           % "3.14.0"  % Test,
+  "ch.qos.logback"                % "logback-classic"         % "1.4.14"  % Test
 )
 
 scalacOptions ++= Seq(
