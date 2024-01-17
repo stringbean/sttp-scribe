@@ -16,19 +16,18 @@
 
 package software.purpledragon.sttp.scribe
 
-import java.nio.charset.{Charset, StandardCharsets}
-
-import com.github.scribejava.core.model.{OAuthRequest, ParameterList, Verb, Response => ScribeResponse}
+import java.nio.charset.{StandardCharsets, Charset}
+import com.github.scribejava.core.model.{OAuthRequest, Verb, ParameterList, Response => ScribeResponse}
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.reflect.FieldUtils
-import org.scalamock.scalatest.MockFactory
 import org.scalatest.Suite
 import org.scalatest.matchers.should.Matchers
 
+import org.mockito.ArgumentMatchersSugar._
+import org.mockito.MockitoSugar._
 import scala.jdk.CollectionConverters._
 
-// scalastyle:off null
-trait ScribeHelpers extends MockFactory with Matchers {
+trait ScribeHelpers extends Matchers {
   this: Suite =>
 
   type ResponseStatus = (Int, String)
@@ -74,16 +73,13 @@ trait ScribeHelpers extends MockFactory with Matchers {
     def toResponse: ScribeResponse = {
       val response: ScribeResponse = mock[ScribeResponse]
 
-      (response.getCode _).expects().returning(status._1).anyNumberOfTimes()
-      (response.getMessage _).expects().returning(status._2).anyNumberOfTimes()
+      doReturn(status._1).when(response).getCode
+      doReturn(status._2).when(response).getMessage
 
-      (response.getHeaders _).expects().returning(headers.asJava).anyNumberOfTimes()
-      (response.getHeader _)
-        .expects(*)
-        .onCall({ name: String =>
-          headers.getOrElse(name, null)
-        })
-        .anyNumberOfTimes
+      doReturn(headers.asJava).when(response).getHeaders
+      doAnswer({ name: String =>
+        headers.getOrElse(name, null)
+      }).when(response).getHeader(any[String])
 
       stubBody(response)
 
@@ -104,8 +100,8 @@ trait ScribeHelpers extends MockFactory with Matchers {
       val stream = IOUtils.toInputStream(body, charset)
 
       // some calls are via the stream, others via the string body
-      (response.getStream _).expects().returning(stream).anyNumberOfTimes()
-      (response.getBody _).expects().returning(body).anyNumberOfTimes()
+      doReturn(stream).when(response).getStream
+      doReturn(body).when(response).getBody
     }
   }
 }

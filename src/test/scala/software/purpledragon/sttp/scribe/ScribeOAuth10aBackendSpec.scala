@@ -17,17 +17,17 @@
 package software.purpledragon.sttp.scribe
 
 import com.github.scribejava.core.builder.api.DefaultApi10a
-import com.github.scribejava.core.exceptions.OAuthException
-import com.github.scribejava.core.model.{OAuth1AccessToken, OAuthRequest, Verb}
+import com.github.scribejava.core.model.{OAuthRequest, OAuth1AccessToken, Verb}
 import com.github.scribejava.core.oauth.OAuth10aService
-import org.scalamock.matchers.ArgCapture.CaptureAll
-import org.scalamock.scalatest.MockFactory
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import sttp.client._
 import sttp.model.{MediaType, StatusCode}
+import org.mockito.ArgumentMatchersSugar._
+import org.mockito.MockitoSugar._
+import org.mockito.captor.{ArgCaptor, Captor}
 
-class ScribeOAuth10aBackendSpec extends AnyFlatSpec with Matchers with MockFactory with ScribeHelpers {
+class ScribeOAuth10aBackendSpec extends AnyFlatSpec with Matchers with ScribeHelpers {
 
   "ScribeOAuth10aBackend" should "send get request" in new ScribeOAuth10aFixture {
     // given
@@ -126,14 +126,6 @@ class ScribeOAuth10aBackendSpec extends AnyFlatSpec with Matchers with MockFacto
 
   it should "refresh token on 401 token expired" in new ScribeOAuth10aFixture {
     // given
-    (tokenProvider.tokenRenewed _).expects(*)
-    (tokenProvider.prepareTokenRenewalRequest _).expects(*)
-
-    // renewal request
-    (oauthService.signRequest _).expects(accessToken, capture(requestCaptor))
-    // retried request
-    (oauthService.signRequest _).expects(updatedToken, capture(requestCaptor))
-
     stubResponses(
       StringResponse(
         "oauth_problem=token_expired&oauth_problem_advice=The access token has expired.",
@@ -157,18 +149,13 @@ class ScribeOAuth10aBackendSpec extends AnyFlatSpec with Matchers with MockFacto
       RequestExpectation("https://example.com/oauth/access-token", headers = Map.empty),
       RequestExpectation("https://example.com/api/test")
     )
+
+    verify(tokenProvider).prepareTokenRenewalRequest(any[OAuthRequest])
+    verify(tokenProvider).tokenRenewed(any[OAuth1AccessToken])
   }
 
   it should "only refresh token once" in new ScribeOAuth10aFixture {
     // given
-    (tokenProvider.tokenRenewed _).expects(*)
-    (tokenProvider.prepareTokenRenewalRequest _).expects(*)
-
-    // renewal request
-    (oauthService.signRequest _).expects(accessToken, capture(requestCaptor))
-    // retried request
-    (oauthService.signRequest _).expects(updatedToken, capture(requestCaptor))
-
     stubResponses(
       StringResponse(
         "oauth_problem=token_expired&oauth_problem_advice=The access token has expired.",
@@ -195,6 +182,9 @@ class ScribeOAuth10aBackendSpec extends AnyFlatSpec with Matchers with MockFacto
       RequestExpectation("https://example.com/oauth/access-token", headers = Map.empty),
       RequestExpectation("https://example.com/api/test")
     )
+
+    verify(tokenProvider).prepareTokenRenewalRequest(any[OAuthRequest])
+    verify(tokenProvider).tokenRenewed(any[OAuth1AccessToken])
   }
 
   it should "return 401 if not token expired error" in new ScribeOAuth10aFixture {
@@ -222,15 +212,13 @@ class ScribeOAuth10aBackendSpec extends AnyFlatSpec with Matchers with MockFacto
 
   it should "return 401 on token refresh failure" in new ScribeOAuth10aFixture {
     // given
-    (tokenProvider.prepareTokenRenewalRequest _).expects(*)
-
-    (oauthService.signRequest _)
-      .expects(accessToken, capture(requestCaptor))
-      .throws(new OAuthException("Failed"))
-
     stubResponses(
       StringResponse(
         "oauth_problem=token_expired&oauth_problem_advice=The access token has expired.",
+        status = StatusUnauthorized
+      ),
+      StringResponse(
+        "token renew failed",
         status = StatusUnauthorized
       )
     )
@@ -248,6 +236,9 @@ class ScribeOAuth10aBackendSpec extends AnyFlatSpec with Matchers with MockFacto
       RequestExpectation("https://example.com/api/test"),
       RequestExpectation("https://example.com/oauth/access-token", headers = Map.empty)
     )
+
+    verify(tokenProvider).prepareTokenRenewalRequest(any[OAuthRequest])
+    verify(tokenProvider, never).tokenRenewed(any[OAuth1AccessToken])
   }
 
   "ScribeOAuth10aBackend(encodingStyle = Scribe)" should "send get request with query params" in
@@ -286,24 +277,20 @@ class ScribeOAuth10aBackendSpec extends AnyFlatSpec with Matchers with MockFacto
     }
 
     val accessToken: OAuth1AccessToken = new OAuth1AccessToken("access-token", "token-secret")
-    val updatedToken: OAuth1AccessToken = new OAuth1AccessToken("updated-token", "updated-secret")
 
-    val requestCaptor: CaptureAll[OAuthRequest] = CaptureAll[OAuthRequest]()
+    val requestCaptor: Captor[OAuthRequest] = ArgCaptor[OAuthRequest]
 
     // common to all requests
-    (tokenProvider.accessTokenForRequest _).expects().returning(accessToken)
-    (oauthService.signRequest _).expects(accessToken, capture(requestCaptor))
-    (oauthService.getApi _).expects().returning(oauthApi).anyNumberOfTimes()
+    doReturn(accessToken).when(tokenProvider).accessTokenForRequest
+    doNothing.when(oauthService).signRequest(any[OAuth1AccessToken], requestCaptor.capture)
+    doReturn(oauthApi).when(oauthService).getApi
 
     protected implicit val backend: SttpBackend[Identity, Nothing, NothingT] =
       new ScribeOAuth10aBackend(oauthService, tokenProvider)
 
-    protected def stubResponse(response: TestResponse): Unit = {
-      (oauthService.execute(_: OAuthRequest)).expects(*).returning(response.toResponse)
-    }
-
     protected def stubResponses(responses: TestResponse*): Unit = {
-      responses.foreach(stubResponse)
+      val scribeResponses = responses.map(_.toResponse)
+      doReturn(scribeResponses.head, scribeResponses.tail: _*).when(oauthService).execute(any[OAuthRequest])
     }
 
     protected def verifyRequests(requests: RequestExpectation*): Unit = {
