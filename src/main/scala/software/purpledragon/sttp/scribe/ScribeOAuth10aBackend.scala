@@ -17,7 +17,7 @@
 package software.purpledragon.sttp.scribe
 
 import com.github.scribejava.core.exceptions.OAuthException
-import com.github.scribejava.core.model.{OAuthRequest, Response, OAuth1AccessToken, Verb}
+import com.github.scribejava.core.model.{OAuth1AccessToken, OAuthRequest, Response, Verb}
 import com.github.scribejava.core.oauth.OAuth10aService
 import software.purpledragon.sttp.scribe.QueryParamEncodingStyle.Sttp
 
